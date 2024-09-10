@@ -72,24 +72,25 @@
                                             {% endif %}
                                             {%- set cellType = columns[key].type -%}
                                             {%- set cellVal = row[columns[key].alias] -%}
-                                            {# For grouping by datetime fields, so we don't get the timestamp on them #}
-                                            {% if 'datetime' is same as cellType and 10 is same as cellVal|length %}
-                                                {%- set cellType = 'date' -%}
-                                            {% endif %}
+                                            {# If field is date or datetime, and is formatted with string which does not convert back to date simply print the formatted string. #}
                                             {% if cellVal is not empty %}
-                                                {% if 'datetime' is same as cellType %}
-                                                    {{ dateToFullConcat(cellVal, 'UTC') }}
-                                                {% elseif 'date' is same as cellType %}
-                                                    {{ dateToShort(cellVal, 'UTC') }}
+                                                {% if cellType in ['date', 'datetime'] and strtotime(cellVal) == false %}
+                                                    {{ cellVal }}
                                                 {% else %}
-                                                    {% set value = format(cellVal, cellType) %}
-                                                    {% if collapse == false %}
-                                                        {{ format(cellVal, cellType) }}
+                                                    {% if 'datetime' is same as cellType %}
+                                                        {{ dateToFullConcat(cellVal, 'UTC') }}
+                                                    {% elseif 'date' is same as cellType %}
+                                                        {{ dateToShort(cellVal, 'UTC') }}
                                                     {% else %}
-                                                        {% set value = htmlEntityDecode(format(cellVal, cellType)) %}
-                                                        <div data-toggle="collapse" data-target="#audit-log-details-{{ startCount }}" class="accordion-toggle" style="cursor: pointer">
-                                                            {{ value|length > 50 ? value|slice(0, 50) ~ '...' : value }}
-                                                        </div>
+                                                        {% set value = format(cellVal, cellType) %}
+                                                        {% if collapse == false %}
+                                                            {{ format(cellVal, cellType) }}
+                                                        {% else %}
+                                                            {% set value = htmlEntityDecode(format(cellVal, cellType)) %}
+                                                            <div data-toggle="collapse" data-target="#audit-log-details-{{ startCount }}" class="accordion-toggle" style="cursor: pointer">
+                                                                {{ value|length > 50 ? value|slice(0, 50) ~ '...' : value }}
+                                                            </div>
+                                                        {% endif %}
                                                     {% endif %}
                                                 {% endif %}
                                             {% endif %}
