@@ -12,6 +12,7 @@ use Mautic\CoreBundle\Twig\Helper\AssetsHelper;
 use Mautic\CoreBundle\Twig\Helper\SlotsHelper;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\PageBundle\Entity\Page;
+use MauticPlugin\GrapesJsBuilderBundle\Event\EmailPresetsEvent;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -89,6 +90,10 @@ class GrapesJsController extends CommonController
         $templateName = '@themes/'.$template.'/html/'.$objectType;
         $content      = $entity->getContent();
 
+        $themeConfig = $themeHelper->getTheme($template)->getConfig();
+        $event = new EmailPresetsEvent($themeConfig);
+        $this->dispatcher->dispatch($event, EmailPresetsEvent::EVENT_NAME);
+        dd($event->getConfig());
         // Check for MJML template
         // @deprecated - use mjml directly in email.html.twig
         if ($logicalName = $this->checkForMjmlTemplate($templateName.'.mjml.twig')) {
