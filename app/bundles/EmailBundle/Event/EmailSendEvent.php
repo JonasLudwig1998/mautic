@@ -69,6 +69,15 @@ class EmailSendEvent extends CommonEvent
      * @var bool
      */
     private $isDynamicContentParsing;
+    private bool $fatal = false;
+
+    private bool $skip = false;
+
+    /**
+     * @var array<string>
+     */
+    private array $errors = [];
+
 
     /**
      * @param array $args
@@ -86,6 +95,9 @@ class EmailSendEvent extends CommonEvent
         $this->source      = $args['source'] ?? [];
         $this->tokens      = $args['tokens'] ?? [];
         $this->textHeaders = $args['textHeaders'] ?? [];
+        $this->errors      = $args['errors'] ?? [];
+        $this->fatal       = $args['fatal'] ?? false;
+        $this->skip        = $args['skip'] ?? false;
 
         if (!$this->subject && $this->email instanceof Email) {
             $this->subject = $args['email']->getSubject();
@@ -371,4 +383,49 @@ class EmailSendEvent extends CommonEvent
     {
         return $this->isDynamicContentParsing;
     }
+
+
+    public function disableSkip(): void
+    {
+        $this->skip = false;
+    }
+
+    public function enableSkip(): void
+    {
+        $this->skip = true;
+    }
+
+    public function isSkip(): bool
+    {
+        return $this->skip;
+    }
+
+    public function enableFatal(): void
+    {
+        $this->fatal = true;
+    }
+
+    public function disableFatal(): void
+    {
+        $this->fatal = false;
+    }
+
+    public function isFatal(): bool
+    {
+        return $this->fatal;
+    }
+
+    public function addError(string $error): void
+    {
+        $this->errors[] = $error;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
 }

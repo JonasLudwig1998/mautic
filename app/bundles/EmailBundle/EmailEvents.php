@@ -29,6 +29,16 @@ final class EmailEvents
     const ON_EMAIL_ADDRESS_TOKEN_REPLACEMENT = 'mautic.email_address_token_replacement';
 
     /**
+     * The mautic.email_pre_send event is dispatched when an email is clicked.
+     *
+     * The event listener receives a
+     * Mautic\EmailBundle\Event\EmailSendEvent instance.
+     *
+     * @var string
+     */
+    public const EMAIL_PRE_SEND = 'mautic.email_pre_send';
+
+    /**
      * The mautic.email_on_open event is dispatched when an email is opened.
      *
      * The event listener receives a
