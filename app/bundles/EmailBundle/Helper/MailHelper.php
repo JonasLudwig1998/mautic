@@ -43,7 +43,7 @@ class MailHelper
     protected $templating;
 
     /**
-     * @var null
+     * @var ?\Symfony\Component\EventDispatcher\EventDispatcherInterface
      */
     protected $dispatcher;
 
@@ -2243,7 +2243,7 @@ class MailHelper
         }
 
         $event = new EmailSendEvent($this);
-        $this->dispatcher->dispatch($event, EmailEvents::EMAIL_PRE_SEND);
+        $this->dispatcher->dispatch(EmailEvents::EMAIL_PRE_SEND, $event);
 
         $this->skip               = $event->isSkip();
         $this->fatal              = $event->isFatal();

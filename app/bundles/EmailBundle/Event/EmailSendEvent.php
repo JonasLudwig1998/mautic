@@ -78,7 +78,6 @@ class EmailSendEvent extends CommonEvent
      */
     private array $errors = [];
 
-
     /**
      * @param array $args
      * @param bool  $isDynamicContentParsing
@@ -384,7 +383,6 @@ class EmailSendEvent extends CommonEvent
         return $this->isDynamicContentParsing;
     }
 
-
     public function disableSkip(): void
     {
         $this->skip = false;
@@ -427,5 +425,4 @@ class EmailSendEvent extends CommonEvent
     {
         return $this->errors;
     }
-
 }
