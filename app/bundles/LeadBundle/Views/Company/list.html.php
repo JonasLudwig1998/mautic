@@ -115,7 +115,7 @@ if ('index' == $tmpl) {
                                        )
                                    ): ?>
 
-                            <a href="<?php echo $view['router']->url(
+                            <a href="<?php echo $view['router']->path(
                                 'mautic_company_action',
                                 ['objectAction' => 'view', 'objectId' => $item->getId()]
                             ); ?>" data-toggle="ajax">
@@ -176,7 +176,7 @@ if ('index' == $tmpl) {
                 'page'       => $page,
                 'limit'      => $limit,
                 'menuLinkId' => 'mautic_company_index',
-                'baseUrl'    => $view['router']->url('mautic_company_index'),
+                'baseUrl'    => $view['router']->path('mautic_company_index'),
                 'sessionVar' => 'company',
             ]
         ); ?>
