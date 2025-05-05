@@ -280,4 +280,4 @@ class PointInsight extends FormEntity
     {
         return $this->setIsPublished($active);
     }
-}
+} 

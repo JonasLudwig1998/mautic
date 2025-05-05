@@ -54,11 +54,6 @@ class PointInsightType extends AbstractType
             ]
         );
 
-        $builder->add(
-            'isPublished',
-            YesNoButtonGroupType::class
-        );
-
         $insightTypes = [
             'mautic.point.insight.compare_point_groups' => 'compare_point_groups',
         ];
@@ -87,7 +82,6 @@ class PointInsightType extends AbstractType
                 'attr'       => [
                     'class'                => 'form-control',
                     'data-toggle'          => 'multiselect',
-                    'tooltip'              => 'mautic.point.insight.action.set_custom_field.tooltip',
                 ],
                 'multiple'    => true,
                 'required'    => false,
@@ -152,4 +146,4 @@ class PointInsightType extends AbstractType
     {
         return 'pointinsight';
     }
-}
+} 
