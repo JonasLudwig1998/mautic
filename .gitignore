@@ -109,6 +109,7 @@
 /plugins/*
 !/plugins/GrapesJsBuilderBundle
 !/plugins/MauticClearbitBundle
+!/plugins/LeuchtfeuerFloodlightB2BBundle
 !/plugins/MauticCloudStorageBundle
 !/plugins/MauticCrmBundle
 !/plugins/MauticDynamicsBundle

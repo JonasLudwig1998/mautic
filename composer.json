@@ -22,6 +22,7 @@
     },
   "require": {
     "composer/installers": "^1.11",
+    "jeremykendall/php-domain-parser": "^6.4",
     "mautic/core-lib": "^5.0"
   },
   "require-dev": {
