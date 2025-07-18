@@ -93,7 +93,7 @@ return [
             ],
             'mautic_form_generateform' => [
                 'path'       => '/form/generate.js',
-                'controller' => 'Mautic\FormBundle\Controller\PublicController::generateAction',
+                'controller' => 'MauticPlugin\IccFormTranslationBundle\Controller\PublicController::generateAction',
             ],
             'mautic_form_postmessage' => [
                 'path'       => '/form/message',
