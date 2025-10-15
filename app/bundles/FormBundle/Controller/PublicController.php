@@ -68,7 +68,6 @@ class PublicController extends CommonFormController
             } else {
                 //get what to do immediately after successful post
                 $postAction         = $form->getPostAction();
-                $postActionProperty = $form->getPostActionProperty();
 
                 //check to ensure the form is published
                 $status             = $form->getPublishStatus();
@@ -134,6 +133,7 @@ class PublicController extends CommonFormController
             }
         }
 
+        $postActionProperty = $form->getPostActionProperty();
         if (isset($submissionEvent) && !empty($postActionProperty)) {
             // Replace post action property with tokens to support custom redirects, etc
             $postActionProperty = $this->replacePostSubmitTokens($postActionProperty, $submissionEvent);
