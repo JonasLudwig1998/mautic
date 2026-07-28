@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 
-class InstallController extends CommonController
+final class InstallController extends CommonController
 {
     public function __construct(
         private readonly Configurator $configurator,
@@ -274,9 +274,6 @@ class InstallController extends CommonController
         );
     }
 
-    /**
-     * Handle installer errors.
-     */
     private function handleInstallerErrors(FormInterface $form, array $messages): void
     {
         foreach ($messages as $type => $message) {

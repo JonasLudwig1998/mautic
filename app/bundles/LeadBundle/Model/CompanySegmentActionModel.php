@@ -7,7 +7,7 @@ namespace Mautic\LeadBundle\Model;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\LeadBundle\Entity\Company;
 
-final class CompanySegmentActionModel
+final readonly class CompanySegmentActionModel
 {
     public function __construct(
         private CompanyModel $companyModel,

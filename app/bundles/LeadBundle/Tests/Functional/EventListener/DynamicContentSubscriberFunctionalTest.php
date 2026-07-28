@@ -12,7 +12,7 @@ use Mautic\LeadBundle\Entity\Lead;
 use Mautic\PageBundle\Entity\Page;
 use Symfony\Component\HttpFoundation\Request;
 
-class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
+final class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 {
     use CreateTestEntitiesTrait;
 
@@ -53,7 +53,7 @@ class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('VIP Content', $response->getContent());
+        $this->assertStringContainsString('VIP Content', (string) $response->getContent());
     }
 
     public function testLeadDoesNotSeeContentWhenPrimaryCompanyIsNotInSegment(): void
@@ -89,7 +89,7 @@ class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertStringNotContainsString('VIP Content', $response->getContent());
+        $this->assertStringNotContainsString('VIP Content', (string) $response->getContent());
     }
 
     public function testLeadSeesContentWithNotInOperator(): void
@@ -126,7 +126,7 @@ class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('Non-VIP Content', $response->getContent());
+        $this->assertStringContainsString('Non-VIP Content', (string) $response->getContent());
     }
 
     public function testLeadWithoutPrimaryCompanySeesContentWithEmptyOperator(): void
@@ -158,7 +158,7 @@ class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('No Company Segment Content', $response->getContent());
+        $this->assertStringContainsString('No Company Segment Content', (string) $response->getContent());
     }
 
     public function testLeadWithCompanyInSegmentDoesNotSeeContentWithEmptyOperator(): void
@@ -195,7 +195,7 @@ class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertStringNotContainsString('No Company Segment Content', $response->getContent());
+        $this->assertStringNotContainsString('No Company Segment Content', (string) $response->getContent());
     }
 
     public function testLeadWithCompanyInSegmentSeesContentWithNotEmptyOperator(): void
@@ -233,7 +233,7 @@ class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('Has Company Segment Content', $response->getContent());
+        $this->assertStringContainsString('Has Company Segment Content', (string) $response->getContent());
     }
 
     public function testLeadWithoutPrimaryCompanyDoesNotSeeContentWithNotEmptyOperator(): void
@@ -264,7 +264,7 @@ class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertStringNotContainsString('Has Company Segment Content', $response->getContent());
+        $this->assertStringNotContainsString('Has Company Segment Content', (string) $response->getContent());
     }
 
     public function testLeadWithCompanyInMultipleSegments(): void
@@ -303,7 +303,7 @@ class DynamicContentSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('Premium Content', $response->getContent());
+        $this->assertStringContainsString('Premium Content', (string) $response->getContent());
     }
 
     /**

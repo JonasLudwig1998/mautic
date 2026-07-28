@@ -9,34 +9,15 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 class CompanySegmentActionType extends AbstractType
 {
+    use SegmentFormBuilderTrait;
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add(
-            'addToLists',
+        $this->addActionFields(
+            $builder,
             CompanySegmentListType::class,
-            [
-                'label'      => 'mautic.company_segments.campaign.events.addtolists',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class' => 'form-control',
-                ],
-                'multiple' => true,
-                'expanded' => false,
-            ]
-        );
-
-        $builder->add(
-            'removeFromLists',
-            CompanySegmentListType::class,
-            [
-                'label'      => 'mautic.company_segments.campaign.events.removefromlists',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class' => 'form-control',
-                ],
-                'multiple' => true,
-                'expanded' => false,
-            ]
+            'mautic.company_segments.campaign.events.addtolists',
+            'mautic.company_segments.campaign.events.removefromlists'
         );
     }
 

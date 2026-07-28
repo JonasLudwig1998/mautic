@@ -39,7 +39,7 @@ final class CompanySegmentApiController extends CommonApiController
         ModelFactory $modelFactory,
         EventDispatcherInterface $dispatcher,
         CoreParametersHelper $coreParametersHelper,
-        private CompanySegmentModel $companySegmentModel,
+        private readonly CompanySegmentModel $companySegmentModel,
     ) {
         $this->model             = $this->companySegmentModel;
         $this->entityClass       = CompanySegment::class;
@@ -66,39 +66,21 @@ final class CompanySegmentApiController extends CommonApiController
      */
     public function removeCompanyAction(CompanyModel $companyModel, int $id, int $companyId): Response
     {
-        $entity = $this->model->getEntity($id);
-
-        if (null === $entity) {
-            return $this->notFound();
-        }
-
-        $company = $companyModel->getEntity($companyId);
-
-        if (null === $company) {
-            return $this->notFound();
-        } elseif (!$this->security->hasEntityAccess('lead:leads:editown', 'lead:leads:editother', $company->getPermissionUser())) {
-            return $this->accessDenied();
-        }
-
-        \assert($this->model instanceof CompanySegmentModel);
-
-        // Does the user have access to the company segment
-        $companySegments = $this->model->getCompanySegments();
-        if (!isset($companySegments[$id])) {
-            return $this->accessDenied();
-        }
-
-        $this->model->removeCompany($company, [$entity], true);
-
-        $view = $this->view([], Response::HTTP_OK);
-
-        return $this->handleView($view);
+        return $this->updateCompanyMembership($companyModel, $id, $companyId, false);
     }
 
     /**
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public function addCompanyAction(CompanyModel $companyModel, int $id, int $companyId): Response
+    {
+        return $this->updateCompanyMembership($companyModel, $id, $companyId, true);
+    }
+
+    /**
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    private function updateCompanyMembership(CompanyModel $companyModel, int $id, int $companyId, bool $add): Response
     {
         $entity = $this->model->getEntity($id);
 
@@ -122,7 +104,11 @@ final class CompanySegmentApiController extends CommonApiController
             return $this->accessDenied();
         }
 
-        $this->model->addCompany($company, [$entity], true);
+        if ($add) {
+            $this->model->addCompany($company, [$entity], true);
+        } else {
+            $this->model->removeCompany($company, [$entity], true);
+        }
 
         $view = $this->view([], Response::HTTP_OK);
 

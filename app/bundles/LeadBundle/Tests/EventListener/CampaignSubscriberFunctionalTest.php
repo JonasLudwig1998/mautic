@@ -20,12 +20,13 @@ use Mautic\LeadBundle\Entity\LeadRepository;
 use Mautic\LeadBundle\Entity\ListLead;
 use Mautic\LeadBundle\Entity\Tag;
 use Mautic\LeadBundle\LeadEvents;
+use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Segment\OperatorOptions;
 use Mautic\LeadBundle\Tests\Traits\LeadFieldTestTrait;
 use Mautic\PointBundle\Entity\Group;
 use Mautic\PointBundle\Entity\GroupContactScore;
-use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\ApplicationTester;
 use Symfony\Component\HttpFoundation\Response;
@@ -88,7 +89,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
 
         parent::setUp();
 
-        $this->contactRepository = $this->em->getRepository(Lead::class);
+        $this->contactRepository = self::getContainer()->get(LeadRepository::class);
     }
 
     protected function beforeBeginTransaction(): void
@@ -150,7 +151,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
 
         foreach ($listLeads as $contactId) {
             $points = $this->connection->fetchOne("SELECT points FROM {$prefix}leads WHERE id = :id", ['id' => $contactId]);
-            Assert::assertEquals($expectedPoints, $points);
+            $this->assertEquals($expectedPoints, $points);
         }
     }
 
@@ -210,7 +211,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
 
         foreach ($contacts as $contact) {
             $points = $this->connection->fetchOne("SELECT points FROM {$prefix}leads WHERE id = :id", ['id' => $contact->getId()]);
-            Assert::assertEquals($expectedPoints, $points);
+            $this->assertEquals($expectedPoints, $points);
         }
     }
 
@@ -236,7 +237,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
             ]
         );
 
-        Assert::assertSame(0, $exitCode, $applicationTester->getDisplay());
+        $this->assertSame(0, $exitCode, $applicationTester->getDisplay());
     }
 
     public function testIsContactInOneOfStages(): void
@@ -261,14 +262,14 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
         foreach ($contacts as $contact) {
             $args['lead'] = $this->contactRepository->getEntity($contact->getId());
 
-            $event      = new CampaignExecutionEvent($args, true); // @phpstan-ignore new.deprecated
+            $event      = new CampaignExecutionEvent($args, true);
             $dispatcher = static::getContainer()->get('event_dispatcher');
             $result     = $dispatcher->dispatch(
                 $event,
                 LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION
             );
 
-            Assert::assertTrue($event->getResult());
+            $this->assertTrue($event->getResult());
         }
     }
 
@@ -292,7 +293,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
             ]
         );
 
-        Assert::assertSame(0, $exitCode, $applicationTester->getDisplay());
+        $this->assertSame(0, $exitCode, $applicationTester->getDisplay());
 
         /** @var Lead $contactA */
         $contactA = $this->contactRepository->getEntity($contacts[0]->getId());
@@ -341,7 +342,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
             ]
         );
 
-        Assert::assertSame(0, $exitCode, $applicationTester->getDisplay());
+        $this->assertSame(0, $exitCode, $applicationTester->getDisplay());
 
         /** @var Lead $contactA */
         $contactA = $this->contactRepository->getEntity($contacts[0]->getId());
@@ -386,7 +387,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
 
         $exitCode = $this->testSymfonyCommand('mautic:campaigns:trigger', ['--campaign-id' => $campaign->getId()]);
 
-        Assert::assertSame(0, $exitCode->getStatusCode());
+        $this->assertSame(0, $exitCode->getStatusCode());
 
         $this->em->clear();
 
@@ -437,6 +438,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
         $lead3      = $this->createContact('test_true_'.uniqid().'@example.com');
         $contactId3 = $lead3->getId();
 
+        /** @var LeadModel $leadModel */
         $leadModel = $this->getContainer()->get('mautic.lead.model.lead');
 
         $leadModel->setFieldValues($lead1, [
@@ -492,17 +494,20 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
         $lead1 = $this->contactRepository->getEntity($contactId1);
         $lead2 = $this->contactRepository->getEntity($contactId2);
         $lead3 = $this->contactRepository->getEntity($contactId3);
+        $this->assertInstanceOf(Lead::class, $lead1);
 
         $result1 = [
             $lead1->getFieldValue('bool1'),
             $lead1->getFieldValue('bool2'),
             $lead1->getFieldValue('bool3'),
         ];
+        $this->assertInstanceOf(Lead::class, $lead2);
         $result2 = [
             $lead2->getFieldValue('bool1'),
             $lead2->getFieldValue('bool2'),
             $lead2->getFieldValue('bool3'),
         ];
+        $this->assertInstanceOf(Lead::class, $lead3);
         $result3 = [
             $lead3->getFieldValue('bool1'),
             $lead3->getFieldValue('bool2'),
@@ -559,7 +564,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
     private function addStageToContacts(array $contacts, int $stageId): void
     {
         foreach ($contacts as $contact) {
-            $this->client->request('POST', "/api/stages/$stageId/contact/{$contact->getId()}/add");
+            $this->client->request('POST', "/api/stages/{$stageId}/contact/{$contact->getId()}/add");
             $clientResponse = $this->client->getResponse();
 
             $this->assertEquals(Response::HTTP_OK, $clientResponse->getStatusCode(), $clientResponse->getContent());
@@ -1054,14 +1059,14 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
             'eventSettings'   => [],
         ];
 
-        $event           = new CampaignExecutionEvent($args, false, $log); // @phpstan-ignore new.deprecated
+        $event           = new CampaignExecutionEvent($args, false, $log);
         $eventDispatcher = static::getContainer()->get('event_dispatcher');
         $eventDispatcher->dispatch($event, 'mautic.lead.on_campaign_trigger_action');
 
         $leadManipulator = $lead->getManipulator();
-        Assert::assertInstanceOf(LeadManipulator::class, $leadManipulator);
-        Assert::assertSame('campaign', $leadManipulator->getBundleName());
-        Assert::assertSame('trigger-action', $leadManipulator->getObjectName());
+        $this->assertInstanceOf(LeadManipulator::class, $leadManipulator);
+        $this->assertSame('campaign', $leadManipulator->getBundleName());
+        $this->assertSame('trigger-action', $leadManipulator->getObjectName());
     }
 
     private function addContactToCampaign(Campaign $campaign, Lead $lead): void
@@ -1184,17 +1189,17 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
         $johnAfter = $this->contactRepository->getEntity($john->getId());
         $annaAfter = $this->contactRepository->getEntity($anna->getId());
 
-        self::assertNotNull($joeAfter);
-        self::assertSame('PASS', $joeAfter->getLastname(), 'Joe\'s company (Glibi) is in the segment, should take YES branch');
+        $this->assertInstanceOf(Lead::class, $joeAfter);
+        $this->assertSame('PASS', $joeAfter->getLastname(), 'Joe\'s company (Glibi) is in the segment, should take YES branch');
 
-        self::assertNotNull($maryAfter);
-        self::assertSame('PASS', $maryAfter->getLastname(), 'Mary\'s company (Glibi) is in the segment, should take YES branch');
+        $this->assertInstanceOf(Lead::class, $maryAfter);
+        $this->assertSame('PASS', $maryAfter->getLastname(), 'Mary\'s company (Glibi) is in the segment, should take YES branch');
 
-        self::assertNotNull($johnAfter);
-        self::assertSame('FAIL', $johnAfter->getLastname(), 'John\'s company (TBS) is NOT in the segment, should take NO branch');
+        $this->assertInstanceOf(Lead::class, $johnAfter);
+        $this->assertSame('FAIL', $johnAfter->getLastname(), 'John\'s company (TBS) is NOT in the segment, should take NO branch');
 
-        self::assertNotNull($annaAfter);
-        self::assertSame('FAIL', $annaAfter->getLastname(), 'Anna\'s company (Abc) is manually removed from the segment, should take NO branch');
+        $this->assertInstanceOf(Lead::class, $annaAfter);
+        $this->assertSame('FAIL', $annaAfter->getLastname(), 'Anna\'s company (Abc) is manually removed from the segment, should take NO branch');
     }
 
     /**
@@ -1328,32 +1333,32 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
             'company'        => $companyGlibi,
             'companySegment' => $segmentA,
         ]);
-        self::assertNotNull($glibiSegmentA, 'Glibi SegmentCompany entry should exist');
-        self::assertTrue($glibiSegmentA->isManuallyRemoved(), 'Glibi should be manually removed from Segment A');
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\SegmentCompany::class, $glibiSegmentA, 'Glibi SegmentCompany entry should exist');
+        $this->assertTrue($glibiSegmentA->isManuallyRemoved(), 'Glibi should be manually removed from Segment A');
 
         $glibiSegmentC = $segmentCompanyRepo->findOneBy([
             'company'        => $companyGlibi,
             'companySegment' => $segmentC,
         ]);
-        self::assertNotNull($glibiSegmentC, 'Glibi should be added to Segment C');
-        self::assertFalse($glibiSegmentC->isManuallyRemoved(), 'Glibi should not be manually removed from Segment C');
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\SegmentCompany::class, $glibiSegmentC, 'Glibi should be added to Segment C');
+        $this->assertFalse($glibiSegmentC->isManuallyRemoved(), 'Glibi should not be manually removed from Segment C');
 
         $tbsSegmentB = $segmentCompanyRepo->findOneBy([
             'company'        => $companyTBS,
             'companySegment' => $segmentB,
         ]);
-        self::assertNotNull($tbsSegmentB, 'TBS should still be in Segment B');
-        self::assertFalse($tbsSegmentB->isManuallyRemoved(), 'TBS should not be manually removed from Segment B');
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\SegmentCompany::class, $tbsSegmentB, 'TBS should still be in Segment B');
+        $this->assertFalse($tbsSegmentB->isManuallyRemoved(), 'TBS should not be manually removed from Segment B');
 
         $tbsSegmentC = $segmentCompanyRepo->findOneBy([
             'company'        => $companyTBS,
             'companySegment' => $segmentC,
         ]);
-        self::assertNotNull($tbsSegmentC, 'TBS should be added to Segment C');
-        self::assertFalse($tbsSegmentC->isManuallyRemoved(), 'TBS should not be manually removed from Segment C');
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\SegmentCompany::class, $tbsSegmentC, 'TBS should be added to Segment C');
+        $this->assertFalse($tbsSegmentC->isManuallyRemoved(), 'TBS should not be manually removed from Segment C');
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('regexOperatorProvider')]
+    #[DataProvider('regexOperatorProvider')]
     public function testRegexOperatorOnDateFieldCondition(string $operator, string $regex, string $fieldValue, bool $expectedResult): void
     {
         $this->useCleanupRollback = false;
@@ -1368,6 +1373,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
 
         // Create a contact and set the custom field value
         $contact   = $this->createContact('john.doe@example.com');
+        /** @var LeadModel $leadModel */
         $leadModel = static::getContainer()->get('mautic.lead.model.lead');
         $leadModel->setFieldValues($contact, ['test_date' => $fieldValue]);
         $leadModel->saveEntity($contact);
@@ -1404,6 +1410,7 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->assertSame($expectedResult, $event->getResult(), 'Regex operator should not cause exception and should match as expected.');
 
         // Clean up
+        /** @var FieldModel $fieldModel */
         $fieldModel = static::getContainer()->get('mautic.lead.model.field');
         $field      = $fieldModel->getEntityByAlias('test_date');
         if ($field) {
@@ -1412,20 +1419,18 @@ final class CampaignSubscriberFunctionalTest extends MauticMysqlTestCase
     }
 
     /**
-     * @return array<int, array{string, string, string, bool}>
+     * @return \Iterator<int, array{string, string, string, bool}>
      */
-    public static function regexOperatorProvider(): array
+    public static function regexOperatorProvider(): \Iterator
     {
-        return [
-            // [operator, regex, fieldValue, expectedResult]
-            [OperatorOptions::REGEXP, "^\d{4}-03-24$", '2026-03-24', true],
-            [OperatorOptions::REGEXP, "^\d{4}-12-31$", '2026-03-24', false],
-            [OperatorOptions::REGEXP, "^\d{4}-03-\d{2}$", '2026-03-24', true],
-            [OperatorOptions::REGEXP, "^\d{4}-12-\d{2}$", '2026-03-24', false],
-            [OperatorOptions::NOT_REGEXP, "^\d{4}-12-31$", '2026-03-24', true],
-            [OperatorOptions::NOT_REGEXP, "^\d{4}-03-24$", '2026-03-24', false],
-            [OperatorOptions::NOT_REGEXP, "^\d{4}-12-\d{2}$", '2026-03-24', true],
-            [OperatorOptions::NOT_REGEXP, "^\d{4}-03-\d{2}$", '2026-03-24', false],
-        ];
+        // [operator, regex, fieldValue, expectedResult]
+        yield [OperatorOptions::REGEXP, "^\d{4}-03-24$", '2026-03-24', true];
+        yield [OperatorOptions::REGEXP, "^\d{4}-12-31$", '2026-03-24', false];
+        yield [OperatorOptions::REGEXP, "^\d{4}-03-\d{2}$", '2026-03-24', true];
+        yield [OperatorOptions::REGEXP, "^\d{4}-12-\d{2}$", '2026-03-24', false];
+        yield [OperatorOptions::NOT_REGEXP, "^\d{4}-12-31$", '2026-03-24', true];
+        yield [OperatorOptions::NOT_REGEXP, "^\d{4}-03-24$", '2026-03-24', false];
+        yield [OperatorOptions::NOT_REGEXP, "^\d{4}-12-\d{2}$", '2026-03-24', true];
+        yield [OperatorOptions::NOT_REGEXP, "^\d{4}-03-\d{2}$", '2026-03-24', false];
     }
 }

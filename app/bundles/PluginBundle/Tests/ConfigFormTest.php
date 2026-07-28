@@ -9,6 +9,8 @@ use Mautic\CoreBundle\Cache\ResultCacheOptions;
 use Mautic\CoreBundle\Helper\BundleHelper;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\PathsHelper;
+use Mautic\PluginBundle\Entity\Integration;
+use Mautic\PluginBundle\Entity\IntegrationEntity;
 use Mautic\PluginBundle\Entity\IntegrationEntityRepository;
 use Mautic\PluginBundle\Entity\IntegrationRepository;
 use Mautic\PluginBundle\Entity\Plugin;
@@ -128,12 +130,9 @@ final class ConfigFormTest extends KernelTestCase
 
     public function getIntegrationObject(): IntegrationHelper
     {
-        // create an integration object
-        $pathsHelper          = $this->createMock(PathsHelper::class);
         $bundleHelper         = $this->createMock(BundleHelper::class);
         $pluginModel          = $this->createMock(PluginModel::class);
         $coreParametersHelper = new CoreParametersHelper(self::$kernel->getContainer());
-        $twig                 = $this->createMock(Environment::class);
         $entityManager        = $this->createMock(EntityManager::class);
 
         $pluginRepository = $this->createMock(PluginRepository::class);
@@ -152,8 +151,8 @@ final class ConfigFormTest extends KernelTestCase
                 ->willReturnMap(
                     [
                         [Plugin::class, $pluginRepository],
-                        [\Mautic\PluginBundle\Entity\Integration::class, $integrationRepository],
-                        [\Mautic\PluginBundle\Entity\IntegrationEntity::class, $integrationEntityRepository],
+                        [Integration::class, $integrationRepository],
+                        [IntegrationEntity::class, $integrationEntityRepository],
                     ]
                 );
 
@@ -171,10 +170,10 @@ final class ConfigFormTest extends KernelTestCase
         return new IntegrationHelper(
             self::getContainer(),
             $entityManager,
-            $pathsHelper,
+            $this->createStub(PathsHelper::class),
             $bundleHelper,
             $coreParametersHelper,
-            $twig,
+            $this->createStub(Environment::class),
             $pluginModel
         );
     }

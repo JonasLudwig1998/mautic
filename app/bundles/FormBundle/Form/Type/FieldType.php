@@ -24,7 +24,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * @extends AbstractType<mixed>
  */
-class FieldType extends AbstractType
+final class FieldType extends AbstractType
 {
     use FormFieldTrait;
 
@@ -205,7 +205,7 @@ class FieldType extends AbstractType
                 'attr'        => ['class' => 'form-control'],
                 'constraints' => [
                     new Assert\NotBlank(
-                        ['message' => 'mautic.form.field.label.notblank']
+                        message: 'mautic.form.field.label.notblank'
                     ),
                 ],
             ]
@@ -499,7 +499,7 @@ class FieldType extends AbstractType
                     ChoiceType::class,
                     [
                         'choices'     => $fields->toChoices(),
-                        'choice_attr' => function ($val) use ($fields): array {
+                        'choice_attr' => function (string $val) use ($fields): array {
                             try {
                                 $field = $fields->getFieldByKey($val);
                                 if ($field->isListType()) {

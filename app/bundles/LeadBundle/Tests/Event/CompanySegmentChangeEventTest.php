@@ -65,6 +65,6 @@ final class CompanySegmentChangeEventTest extends TestCase
         $companySegment = new CompanySegment();
         $event          = new CompanySegmentChangeEvent($company, $companySegment, true);
 
-        $this->assertNull($event->getDate());
+        $this->assertNotInstanceOf(\DateTimeInterface::class, $event->getDate());
     }
 }

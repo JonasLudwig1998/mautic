@@ -19,8 +19,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class CompanySegmentFilterType extends AbstractType
 {
     public function __construct(
-        private FormAdjustmentsProviderInterface $formAdjustmentsProvider,
-        private CompanySegmentModel $companySegmentModel,
+        private readonly FormAdjustmentsProviderInterface $formAdjustmentsProvider,
+        private readonly CompanySegmentModel $companySegmentModel,
     ) {
     }
 

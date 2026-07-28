@@ -20,7 +20,7 @@ use Symfony\Component\Validator\Test\ConstraintValidatorTestCase;
 /**
  * @extends \Symfony\Component\Validator\Test\ConstraintValidatorTestCase<\Mautic\LeadBundle\Validator\Constraints\UniqueCompanySegmentAliasValidator>
  */
-class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
+final class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
 {
     /**
      * @var MockObject&CompanySegmentRepository
@@ -37,7 +37,7 @@ class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
         $this->expectException(UnexpectedValueException::class);
         $this->assertNoActionsTaken();
 
-        $this->validator->validate(new \stdClass(), $this->createMock(UniqueCompanySegmentAlias::class));
+        $this->validator->validate(new \stdClass(), $this->createStub(UniqueCompanySegmentAlias::class));
     }
 
     public function testConstraintIsNotUniqueAlias(): void
@@ -45,16 +45,16 @@ class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
         $this->expectException(UnexpectedTypeException::class);
         $this->assertNoActionsTaken();
 
-        $this->validator->validate($this->createMock(CompanySegment::class), $this->createMock(Constraint::class));
+        $this->validator->validate($this->createStub(CompanySegment::class), $this->createStub(Constraint::class));
     }
 
     public function testFieldOptionIsRequired(): void
     {
         $this->assertNoActionsTaken();
 
-        $constraint        = $this->createMock(UniqueCompanySegmentAlias::class);
+        $constraint        = $this->createStub(UniqueCompanySegmentAlias::class);
         $constraint->field = '';
-        $this->validator->validate($this->createMock(CompanySegment::class), $constraint);
+        $this->validator->validate($this->createStub(CompanySegment::class), $constraint);
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('provideNullOrEmpty')]
@@ -62,7 +62,7 @@ class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
     {
         $this->assertNoActionsTaken();
 
-        $constraint        = $this->createMock(UniqueCompanySegmentAlias::class);
+        $constraint        = $this->createStub(UniqueCompanySegmentAlias::class);
         $constraint->field = 'alias';
         $companySegment    = $this->createMock(CompanySegment::class);
         $companySegment->method('getAlias')
@@ -82,9 +82,9 @@ class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
     {
         $aliasName = 'alias';
         $segmentId = 38746584375698237;
-        $user      = $this->createMock(User::class);
+        $user      = $this->createStub(User::class);
 
-        $constraint        = $this->createMock(UniqueCompanySegmentAlias::class);
+        $constraint        = $this->createStub(UniqueCompanySegmentAlias::class);
         $constraint->field = 'alias';
         $companySegment    = $this->createMock(CompanySegment::class);
         $companySegment->method('getAlias')
@@ -92,11 +92,11 @@ class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
         $companySegment->method('getId')
             ->willReturn($segmentId);
 
-        $this->segmentRepository->expects(self::once())
+        $this->segmentRepository->expects($this->once())
             ->method('getSegments')
             ->with($user, $aliasName, $segmentId)
             ->willReturn([]);
-        $this->userHelper->expects(self::once())
+        $this->userHelper->expects($this->once())
             ->method('getUser')
             ->willReturn($user);
 
@@ -109,9 +109,9 @@ class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
         $aliasName  = 'alias';
         $aliasField = 'alias_field';
         $segmentId  = 38746584375698237;
-        $user       = $this->createMock(User::class);
+        $user       = $this->createStub(User::class);
 
-        $constraint        = $this->createMock(UniqueCompanySegmentAlias::class);
+        $constraint        = $this->createStub(UniqueCompanySegmentAlias::class);
         $constraint->field = $aliasField;
         $companySegment    = $this->createMock(CompanySegment::class);
         $companySegment->method('getAlias')
@@ -119,11 +119,11 @@ class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
         $companySegment->method('getId')
             ->willReturn($segmentId);
 
-        $this->segmentRepository->expects(self::once())
+        $this->segmentRepository->expects($this->once())
             ->method('getSegments')
             ->with($user, $aliasName, $segmentId)
-            ->willReturn([$this->createMock(CompanySegment::class)]);
-        $this->userHelper->expects(self::once())
+            ->willReturn([$this->createStub(CompanySegment::class)]);
+        $this->userHelper->expects($this->once())
             ->method('getUser')
             ->willReturn($user);
 
@@ -144,9 +144,9 @@ class UniqueCompanySegmentAliasValidatorTest extends ConstraintValidatorTestCase
 
     private function assertNoActionsTaken(): void
     {
-        $this->segmentRepository->expects(self::never())
+        $this->segmentRepository->expects($this->never())
             ->method('getSegments');
-        $this->userHelper->expects(self::never())
+        $this->userHelper->expects($this->never())
             ->method('getUser');
     }
 }

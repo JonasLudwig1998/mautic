@@ -16,7 +16,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class CompanySegmentListType extends AbstractType
 {
     public function __construct(
-        private CompanySegmentModel $companySegmentModel,
+        private readonly CompanySegmentModel $companySegmentModel,
     ) {
     }
 

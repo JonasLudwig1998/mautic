@@ -8,8 +8,10 @@ use Mautic\CacheBundle\Cache\CacheProviderInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Psr\Cache\InvalidArgumentException;
 
-final class CompanySegmentCountCacheHelper
+final readonly class CompanySegmentCountCacheHelper
 {
+    use SegmentCountCacheOperationsTrait;
+
     public function __construct(
         private CacheProviderInterface $cacheProvider,
         private CoreParametersHelper $coreParametersHelper,
@@ -21,7 +23,7 @@ final class CompanySegmentCountCacheHelper
      */
     public function getSegmentCompanyCount(int $segmentId): int
     {
-        return (int) $this->cacheProvider->getItem($this->generateCacheKey($segmentId))->get();
+        return $this->getCount($this->generateCacheKey($segmentId));
     }
 
     /**
@@ -29,15 +31,7 @@ final class CompanySegmentCountCacheHelper
      */
     public function setSegmentCompanyCount(int $segmentId, int $count): void
     {
-        $item = $this->cacheProvider->getItem($this->generateCacheKey($segmentId));
-        $item->set($count);
-
-        $ttl = $this->coreParametersHelper->get('segment_api_count_cache_ttl', 43200);
-        if ($ttl) {
-            $item->expiresAfter($ttl);
-        }
-
-        $this->cacheProvider->save($item);
+        $this->setCount($this->generateCacheKey($segmentId), $count, $this->getTtl());
     }
 
     /**
@@ -45,7 +39,7 @@ final class CompanySegmentCountCacheHelper
      */
     public function hasSegmentCompanyCount(int $segmentId): bool
     {
-        return $this->cacheProvider->hasItem($this->generateCacheKey($segmentId));
+        return $this->hasCount($this->generateCacheKey($segmentId));
     }
 
     /**
@@ -53,9 +47,7 @@ final class CompanySegmentCountCacheHelper
      */
     public function invalidateSegmentCompanyCount(int $segmentId): void
     {
-        if ($this->hasSegmentCompanyCount($segmentId)) {
-            $this->cacheProvider->deleteItem($this->generateCacheKey($segmentId));
-        }
+        $this->deleteCount($this->generateCacheKey($segmentId));
     }
 
     /**
@@ -63,8 +55,7 @@ final class CompanySegmentCountCacheHelper
      */
     public function incrementSegmentCompanyCount(int $segmentId): void
     {
-        $count = $this->hasSegmentCompanyCount($segmentId) ? $this->getSegmentCompanyCount($segmentId) : 0;
-        $this->setSegmentCompanyCount($segmentId, ++$count);
+        $this->incrementCount($this->generateCacheKey($segmentId), $this->getTtl());
     }
 
     /**
@@ -72,15 +63,12 @@ final class CompanySegmentCountCacheHelper
      */
     public function decrementSegmentCompanyCount(int $segmentId): void
     {
-        if ($this->hasSegmentCompanyCount($segmentId)) {
-            $count = $this->getSegmentCompanyCount($segmentId);
+        $this->decrementCount($this->generateCacheKey($segmentId), $this->getTtl());
+    }
 
-            if ($count <= 0) {
-                $count = 1;
-            }
-
-            $this->setSegmentCompanyCount($segmentId, --$count);
-        }
+    private function getTtl(): mixed
+    {
+        return $this->coreParametersHelper->get('segment_api_count_cache_ttl', 43200);
     }
 
     private function generateCacheKey(int $segmentId): string

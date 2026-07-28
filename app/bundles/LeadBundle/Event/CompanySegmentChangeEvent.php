@@ -11,10 +11,10 @@ use Symfony\Contracts\EventDispatcher\Event;
 final class CompanySegmentChangeEvent extends Event
 {
     public function __construct(
-        private Company $company,
-        private CompanySegment $companySegment,
-        private bool $added = true,
-        private ?\DateTimeInterface $date = null,
+        private readonly Company $company,
+        private readonly CompanySegment $companySegment,
+        private readonly bool $added = true,
+        private readonly ?\DateTimeInterface $date = null,
     ) {
     }
 

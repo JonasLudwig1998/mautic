@@ -17,7 +17,7 @@ final class CompanySegmentFiltersChoicesEvent extends AbstractCustomRequestEvent
         private array $choices,
         private array $operators,
         ?Request $request = null,
-        private string $search = '',
+        private readonly string $search = '',
     ) {
         parent::__construct($request);
     }

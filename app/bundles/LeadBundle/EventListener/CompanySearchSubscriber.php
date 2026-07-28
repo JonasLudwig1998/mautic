@@ -15,7 +15,7 @@ use Mautic\LeadBundle\Segment\Query\QueryBuilder;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-final class CompanySearchSubscriber implements EventSubscriberInterface
+final readonly class CompanySearchSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private TranslatorInterface $translator,
@@ -99,6 +99,6 @@ final class CompanySearchSubscriber implements EventSubscriberInterface
             ->executeQuery()
             ->fetchFirstColumn();
 
-        return array_map('intval', $result);
+        return array_map(intval(...), $result);
     }
 }

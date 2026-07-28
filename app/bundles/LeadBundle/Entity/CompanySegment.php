@@ -123,7 +123,7 @@ class CompanySegment extends FormEntity
     public static function loadValidatorMetadata(ClassMetadata $metadata): void
     {
         $metadata->addPropertyConstraint('name', new NotBlank(
-            ['message' => 'mautic.core.name.required']
+            message: 'mautic.core.name.required'
         ));
 
         $metadata->addConstraint(new UniqueCompanySegmentAlias([

@@ -12,11 +12,13 @@ use Mautic\LeadBundle\Segment\Exception\SegmentQueryException;
 use Mautic\LeadBundle\Segment\Query\CompanyBatchLimiterTrait;
 use Mautic\LeadBundle\Segment\Query\CompanySegmentQueryBuilder;
 use Mautic\LeadBundle\Segment\Query\QueryBuilder;
+use Mautic\LeadBundle\Segment\SegmentQueryExecutionTrait;
 use Psr\Log\LoggerInterface;
 
 final class CompanySegmentService
 {
     use CompanyBatchLimiterTrait;
+    use SegmentQueryExecutionTrait;
 
     public function __construct(
         private ContactSegmentFilterFactory $contactSegmentFilterFactory,
@@ -61,7 +63,8 @@ final class CompanySegmentService
         }
         $this->logger->debug('Company Segment QB: Create SQL: '.$debug, ['segmentId' => $companySegmentId]);
 
-        $result = $this->timedFetch($qb, $companySegmentId);
+        $result = $this->timedFetch($qb, $companySegmentId, 'Company Segment QB');
+        \assert(is_array($result));
         \assert(3 === count($result));
         \assert(is_string($result['count']) && is_numeric($result['count']));
         \assert(is_string($result['maxId']) && is_numeric($result['maxId']));
@@ -108,7 +111,8 @@ final class CompanySegmentService
         }
         $this->logger->debug('Company Segment QB: Create SQL: '.$debug, ['segmentId' => $companySegmentId]);
 
-        $result = $this->timedFetch($qb, $companySegmentId);
+        $result = $this->timedFetch($qb, $companySegmentId, 'Company Segment QB');
+        \assert(is_array($result));
 
         return [$companySegmentId => $result];
     }
@@ -128,7 +132,7 @@ final class CompanySegmentService
 
         $segmentId = $segment->getId();
         \assert(null !== $segmentId);
-        $result = $this->timedFetchAll($queryBuilder, $segmentId);
+        $result = $this->timedFetchAll($queryBuilder, $segmentId, 'Segment QB');
 
         return [$segmentId => $result];
     }
@@ -154,7 +158,8 @@ final class CompanySegmentService
         }
         $this->logger->debug('Company Segment QB: Orphan Companies Count SQL: '.$debug, ['segmentId' => $segmentId]);
 
-        $result = $this->timedFetch($queryBuilder, $segmentId);
+        $result = $this->timedFetch($queryBuilder, $segmentId, 'Company Segment QB');
+        \assert(is_array($result));
 
         return [$segmentId => $result];
     }
@@ -179,7 +184,7 @@ final class CompanySegmentService
         }
         $this->logger->debug('Company Segment QB: Orphan Companies SQL: '.$debug, ['segmentId' => $segmentId]);
 
-        $result = $this->timedFetchAll($queryBuilder, $segmentId);
+        $result = $this->timedFetchAll($queryBuilder, $segmentId, 'Segment QB');
 
         return [$segmentId => $result];
     }
@@ -320,74 +325,5 @@ final class CompanySegmentService
         }
 
         return $qbO;
-    }
-
-    private function formatPeriod(float $inputSeconds): string
-    {
-        $now = \DateTime::createFromFormat('U.u', number_format($inputSeconds, 6, '.', ''));
-        \assert(false !== $now);
-
-        return $now->format('H:i:s.u');
-    }
-
-    /**
-     * @return array<mixed>
-     *
-     * @throws \Exception
-     */
-    private function timedFetch(QueryBuilder $qb, int $segmentId): array
-    {
-        try {
-            $start = microtime(true);
-
-            $result = $qb->executeQuery()->fetchAssociative();
-            \assert(is_array($result));
-
-            $end = microtime(true) - $start;
-
-            $this->logger->debug('Company Segment QB: Query took: '.$this->formatPeriod($end).', Result count: '.count($result), ['segmentId' => $segmentId]);
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Company Segment QB: Query Exception: '.$e->getMessage(),
-                [
-                    'query'      => $qb->getSQL(),
-                    'parameters' => $qb->getParameters(),
-                ]
-            );
-            throw $e;
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return array<mixed>
-     *
-     * @throws \Exception
-     */
-    private function timedFetchAll(QueryBuilder $qb, int $segmentId): array
-    {
-        try {
-            $start  = microtime(true);
-            $result = $qb->executeQuery()->fetchAllAssociative();
-
-            $end = microtime(true) - $start;
-
-            $this->logger->debug(
-                'Segment QB: Query took: '.$this->formatPeriod($end).'ms. Result count: '.count($result),
-                ['segmentId' => $segmentId]
-            );
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Segment QB: Query Exception: '.$e->getMessage(),
-                [
-                    'query'      => $qb->getSQL(),
-                    'parameters' => $qb->getParameters(),
-                ]
-            );
-            throw $e;
-        }
-
-        return $result;
     }
 }

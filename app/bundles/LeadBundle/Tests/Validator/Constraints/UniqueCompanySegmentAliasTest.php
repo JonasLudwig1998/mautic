@@ -8,7 +8,7 @@ use Mautic\LeadBundle\Validator\Constraints\UniqueCompanySegmentAlias;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Exception\MissingOptionsException;
 
-class UniqueCompanySegmentAliasTest extends TestCase
+final class UniqueCompanySegmentAliasTest extends TestCase
 {
     public function testThrowsConstraintExceptionIfNoFieldIsSet(): void
     {

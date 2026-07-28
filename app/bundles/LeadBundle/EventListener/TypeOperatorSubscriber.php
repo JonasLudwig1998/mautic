@@ -28,7 +28,6 @@ use Mautic\LeadBundle\Provider\FieldChoicesProviderInterface;
 use Mautic\LeadBundle\Provider\TypeOperatorProviderInterface;
 use Mautic\LeadBundle\Segment\OperatorOptions;
 use Mautic\LeadBundle\Segment\SegmentFilterIconTrait;
-use Mautic\StageBundle\Model\StageModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -48,13 +47,13 @@ final class TypeOperatorSubscriber implements EventSubscriberInterface
         private ListModel $listModel,
         private CampaignModel $campaignModel,
         private EmailModel $emailModel,
-        private StageModel $stageModel,
         private CategoryModel $categoryModel,
         private AssetModel $assetModel,
         private TranslatorInterface $translator,
         private CompanySegmentModel $companySegmentModel,
         private FieldChoicesProviderInterface $fieldChoicesProvider,
         private TypeOperatorProviderInterface $typeOperatorProvider,
+        private readonly \Mautic\StageBundle\Entity\StageRepository $stageRepository,
     ) {
     }
 
@@ -148,7 +147,7 @@ final class TypeOperatorSubscriber implements EventSubscriberInterface
                 'multiple'                  => true,
                 'choice_translation_domain' => false,
                 'disabled'                  => $event->filterShouldBeDisabled(),
-                'constraints'               => $event->filterShouldBeDisabled() ? [] : [new NotBlank(['message' => 'mautic.core.value.required'])],
+                'constraints'               => $event->filterShouldBeDisabled() ? [] : [new NotBlank(message: 'mautic.core.value.required')],
                 'attr'                      => [
                     'class'                => 'form-control',
                     'data-placeholder'     => $this->translator->trans('mautic.lead.tags.select_or_create'),
@@ -199,7 +198,7 @@ final class TypeOperatorSubscriber implements EventSubscriberInterface
                 'attr'        => $displayAttr,
                 'constraints' => [
                     new NotBlank(
-                        ['message' => 'mautic.core.value.required']
+                        message: 'mautic.core.value.required'
                     ),
                 ],
             ]
@@ -217,7 +216,7 @@ final class TypeOperatorSubscriber implements EventSubscriberInterface
                 'disabled'    => $event->filterShouldBeDisabled(),
                 'constraints' => [
                     new NotBlank(
-                        ['message' => 'mautic.core.value.required']
+                        message: 'mautic.core.value.required'
                     ),
                 ],
             ]
@@ -273,7 +272,7 @@ final class TypeOperatorSubscriber implements EventSubscriberInterface
                 'disabled'    => $event->filterShouldBeDisabled(),
                 'constraints' => $event->filterShouldBeRequired() ? [
                     new NotBlank(
-                        ['message' => $this->translator->trans('mautic.core.value.required')]
+                        message: $this->translator->trans('mautic.core.value.required')
                     ),
                 ] : [],
             ]
@@ -319,7 +318,7 @@ final class TypeOperatorSubscriber implements EventSubscriberInterface
                     'multiple'                  => $multiple,
                     'choice_translation_domain' => false,
                     'disabled'                  => $event->filterShouldBeDisabled(),
-                    'constraints'               => $event->filterShouldBeDisabled() ? [] : [new NotBlank(['message' => 'mautic.core.value.required'])],
+                    'constraints'               => $event->filterShouldBeDisabled() ? [] : [new NotBlank(message: 'mautic.core.value.required')],
                 ]
             );
             $event->stopPropagation();
@@ -410,7 +409,7 @@ final class TypeOperatorSubscriber implements EventSubscriberInterface
      */
     private function getStageChoices(): array
     {
-        return $this->makeChoices($this->stageModel->getRepository()->getSimpleList(), 'label', 'value');
+        return $this->makeChoices($this->stageRepository->getSimpleList(), 'label', 'value');
     }
 
     /**

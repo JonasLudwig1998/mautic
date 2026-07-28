@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 
-class CompanySegmentModelTest extends TestCase
+final class CompanySegmentModelTest extends TestCase
 {
     public function testAliasIsUnique(): void
     {
@@ -35,24 +35,24 @@ class CompanySegmentModelTest extends TestCase
             ->willReturn($id); // test $isNew parameter is properly passed
         $companySegment->method('getAlias')
             ->willReturn($alias);
-        $companySegment->expects(self::once())
+        $companySegment->expects($this->once())
             ->method('setAlias')
             ->with($alias);
 
         $companySegmentRepository = $this->createMock(CompanySegmentRepository::class);
-        $companySegmentRepository->expects(self::once())
+        $companySegmentRepository->expects($this->once())
             ->method('getSegments')
             ->with(null, $alias, $id)
             ->willReturn([]);
 
-        $model->expects(self::once())
+        $model->expects($this->once())
             ->method('setTimestamps')
             ->with($companySegment, true, true);
         $model->method('cleanAlias')
             ->willReturn($alias);
         $model->method('getRepository')
             ->willReturn($companySegmentRepository);
-        $model->expects(self::exactly(2))
+        $model->expects($this->exactly(2))
             ->method('dispatchEvent')
             ->willReturnMap([
                 ['pre_save', $companySegment, true, null, null],
@@ -77,26 +77,26 @@ class CompanySegmentModelTest extends TestCase
             ->willReturn($id); // test $isNew parameter is properly passed
         $companySegment->method('getAlias')
             ->willReturn($alias);
-        $companySegment->expects(self::once())
+        $companySegment->expects($this->once())
             ->method('setAlias')
             ->with($alias.'1');
 
         $companySegmentRepository = $this->createMock(CompanySegmentRepository::class);
-        $companySegmentRepository->expects(self::exactly(2))
+        $companySegmentRepository->expects($this->exactly(2))
             ->method('getSegments')
             ->willReturnMap([
                 [null, $alias, $id, [['id' => 1, 'name' => 'the name', 'alias' => 'the alias']]],
                 [null, $alias.'1', $id, []],
             ]);
 
-        $model->expects(self::once())
+        $model->expects($this->once())
             ->method('setTimestamps')
             ->with($companySegment, false, true);
         $model->method('cleanAlias')
             ->willReturn($alias);
         $model->method('getRepository')
             ->willReturn($companySegmentRepository);
-        $model->expects(self::exactly(2))
+        $model->expects($this->exactly(2))
             ->method('dispatchEvent')
             ->willReturnMap([
                 ['pre_save', $companySegment, false, null, null],
@@ -130,14 +130,14 @@ class CompanySegmentModelTest extends TestCase
             ->getMock();
 
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->expects(self::once())
+        $dispatcher->expects($this->once())
             ->method('hasListeners')
             ->with($eventClass)
             ->willReturn(false);
 
         $model->setDispatcher($dispatcher);
         $result = $model->testDispatchEvent($action, $this->createMock(CompanySegment::class));
-        self::assertNull($result);
+        $this->assertNotInstanceOf(\Symfony\Contracts\EventDispatcher\Event::class, $result);
     }
 
     public static function provideActionAndEventClass(): \Generator
@@ -172,7 +172,7 @@ class CompanySegmentModelTest extends TestCase
             ->onlyMethods([])
             ->getMock();
 
-        $companySegment = $this->createMock(CompanySegment::class);
+        $companySegment = $this->createStub(CompanySegment::class);
 
         if (null !== $isNew) {
             $providedEvent = new $eventClass($companySegment, $isNew);
@@ -183,23 +183,23 @@ class CompanySegmentModelTest extends TestCase
             $isNew         = false; // To prevent type error. The class is anyway tested.
         }
 
-        \assert($providedEvent instanceof CompanySegmentEvent);
-        \assert($expectedEvent instanceof CompanySegmentEvent);
+        $this->assertInstanceOf(CompanySegmentEvent::class, $providedEvent);
+        $this->assertInstanceOf(CompanySegmentEvent::class, $expectedEvent);
 
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->expects(self::once())
+        $dispatcher->expects($this->once())
             ->method('dispatch')
             ->with($providedEvent)
             ->willReturnArgument(0);
-        $dispatcher->expects(self::once())
+        $dispatcher->expects($this->once())
             ->method('hasListeners')
             ->with($eventClass)
             ->willReturn(true);
 
         $model->setDispatcher($dispatcher);
         $returnedEvent = $model->testDispatchEvent($action, $companySegment, $isNew, null);
-        self::assertEquals($expectedEvent, $returnedEvent);
-        self::assertSame($companySegment, $providedEvent->getCompanySegment());
+        $this->assertEquals($expectedEvent, $returnedEvent);
+        $this->assertSame($companySegment, $providedEvent->getCompanySegment());
     }
 
     public static function provideExistingEvents(): \Generator
@@ -221,12 +221,12 @@ class CompanySegmentModelTest extends TestCase
             ->onlyMethods([])
             ->getMock();
 
-        $companySegment = $this->createMock(CompanySegment::class);
+        $companySegment = $this->createStub(CompanySegment::class);
 
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->expects(self::never())
+        $dispatcher->expects($this->never())
             ->method('dispatch');
-        $dispatcher->expects(self::never())
+        $dispatcher->expects($this->never())
             ->method('hasListeners');
 
         $this->expectException(\RuntimeException::class);
@@ -246,21 +246,21 @@ class CompanySegmentModelTest extends TestCase
             ->onlyMethods([])
             ->getMock();
 
-        $companySegment = $this->createMock(CompanySegment::class);
-        $providedEvent  = $this->createMock(CompanySegmentEvent::class);
+        $companySegment = $this->createStub(CompanySegment::class);
+        $providedEvent  = $this->createStub(CompanySegmentEvent::class);
 
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->expects(self::once())
+        $dispatcher->expects($this->once())
             ->method('dispatch')
             ->with($providedEvent)
             ->willReturnArgument(0);
-        $dispatcher->expects(self::once())
+        $dispatcher->expects($this->once())
             ->method('hasListeners')
             ->with($providedEvent::class)
             ->willReturn(true);
 
         $model->setDispatcher($dispatcher);
         $returnedEvent = $model->testDispatchEvent($action, $companySegment, true, $providedEvent);
-        self::assertSame($providedEvent, $returnedEvent);
+        $this->assertSame($providedEvent, $returnedEvent);
     }
 }

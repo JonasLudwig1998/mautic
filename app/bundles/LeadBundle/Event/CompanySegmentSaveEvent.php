@@ -8,7 +8,7 @@ use Mautic\LeadBundle\Entity\CompanySegment;
 
 abstract class CompanySegmentSaveEvent extends CompanySegmentEvent
 {
-    public function __construct(CompanySegment $companySegment, private bool $isNew)
+    public function __construct(CompanySegment $companySegment, private readonly bool $isNew)
     {
         parent::__construct($companySegment);
     }

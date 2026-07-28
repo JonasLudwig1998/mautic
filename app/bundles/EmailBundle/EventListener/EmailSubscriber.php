@@ -17,7 +17,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class EmailSubscriber implements EventSubscriberInterface
+final readonly class EmailSubscriber implements EventSubscriberInterface
 {
     public const PREHEADER_HTML_ELEMENT_BEFORE  = '<div class="preheader" style="font-size:1px;line-height:1px;display:none;color:#fff;max-height:0;max-width:0;opacity:0;overflow:hidden">';
 
@@ -30,12 +30,13 @@ class EmailSubscriber implements EventSubscriberInterface
     private const RETRY_COUNT = 3;
 
     public function __construct(
-        private readonly IpLookupHelper $ipLookupHelper,
-        private readonly AuditLogModel $auditLogModel,
-        private readonly EmailModel $emailModel,
-        private readonly TranslatorInterface $translator,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly EmailDraftModel $emailDraftModel,
+        private IpLookupHelper $ipLookupHelper,
+        private AuditLogModel $auditLogModel,
+        private EmailModel $emailModel,
+        private TranslatorInterface $translator,
+        private EntityManagerInterface $entityManager,
+        private EmailDraftModel $emailDraftModel,
+        private readonly \Mautic\EmailBundle\Entity\EmailRepository $emailRepository,
     ) {
     }
 
@@ -58,7 +59,7 @@ class EmailSubscriber implements EventSubscriberInterface
     {
         $email = $event->getEmail();
         if ($email->isVariant()) {
-            $this->emailModel->getRepository()->cloneFromParentToVariant($email);
+            $this->emailRepository->cloneFromParentToVariant($email);
         }
     }
 
@@ -177,7 +178,7 @@ class EmailSubscriber implements EventSubscriberInterface
         $editedEmail = $event->getCurrentEmail();
 
         if (
-            ((true === $event->isSaveAndClose()) || (true === $event->isApply()))
+            ($event->isSaveAndClose() || $event->isApply())
             && $editedEmail->hasDraft()
         ) {
             $emailDraft = $editedEmail->getDraft();
@@ -189,7 +190,7 @@ class EmailSubscriber implements EventSubscriberInterface
             $this->entityManager->persist($editedEmail);
         }
 
-        if (true === $event->isSaveAsDraft()) {
+        if ($event->isSaveAsDraft()) {
             $emailDraft = $this
                 ->emailDraftModel
                 ->createDraft($editedEmail, $editedEmail->getCustomHtml(), $editedEmail->getTemplate());
@@ -200,14 +201,14 @@ class EmailSubscriber implements EventSubscriberInterface
             $this->emailModel->saveEntity($editedEmail);
         }
 
-        if (true === $event->isDiscardDraft()) {
+        if ($event->isDiscardDraft()) {
             $this->revertEmailModifications($liveEmail, $editedEmail);
             $this->emailDraftModel->deleteDraft($editedEmail);
             $editedEmail->setDraft(null);
             $this->entityManager->persist($editedEmail);
         }
 
-        if (true === $event->isApplyDraft()) {
+        if ($event->isApplyDraft()) {
             $this->emailDraftModel->deleteDraft($editedEmail);
             $editedEmail->setDraft(null);
         }

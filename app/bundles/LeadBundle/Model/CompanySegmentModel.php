@@ -63,12 +63,15 @@ class CompanySegmentModel extends FormModel
     private array $choiceFieldsCache = [];
 
     public function __construct(
-        private CompanySegmentCountCacheHelper $companySegmentCountCacheHelper,
-        private RequestStack $requestStack,
-        private CompanySegmentService $companySegmentService,
-        private ListModel $listModel,
-        private Connection $connection,
-        private TypeOperatorProviderInterface $typeOperatorProvider,
+        private readonly CompanySegmentCountCacheHelper $companySegmentCountCacheHelper,
+        private readonly RequestStack $requestStack,
+        private readonly CompanySegmentService $companySegmentService,
+        private readonly ListModel $listModel,
+        private readonly Connection $connection,
+        private readonly TypeOperatorProviderInterface $typeOperatorProvider,
+        private readonly CompanySegmentRepository $companySegmentRepository,
+        private readonly SegmentCompanyRepository $segmentCompanyRepository,
+        private readonly CompanyRepository $companyRepository,
         EntityManagerInterface $em,
         CorePermissions $security,
         EventDispatcherInterface $dispatcher,
@@ -83,18 +86,12 @@ class CompanySegmentModel extends FormModel
 
     public function getRepository(): CompanySegmentRepository
     {
-        $repository = $this->em->getRepository(CompanySegment::class);
-        \assert($repository instanceof CompanySegmentRepository);
-
-        return $repository;
+        return $this->companySegmentRepository;
     }
 
     public function getSegmentCompanyRepository(): SegmentCompanyRepository
     {
-        $repository = $this->em->getRepository(SegmentCompany::class);
-        \assert($repository instanceof SegmentCompanyRepository);
-
-        return $repository;
+        return $this->segmentCompanyRepository;
     }
 
     protected function getCacheHelper(): CompanySegmentCountCacheHelper
@@ -498,10 +495,7 @@ class CompanySegmentModel extends FormModel
 
     public function getCompanyRepository(): CompanyRepository
     {
-        $repository = $this->em->getRepository(Company::class);
-        \assert($repository instanceof CompanyRepository);
-
-        return $repository;
+        return $this->companyRepository;
     }
 
     public function rebuildCompanySegment(CompanySegment $companySegment, int $limit = 100, ?int $max = null, ?OutputInterface $output = null): int

@@ -2,6 +2,7 @@
 
 namespace MauticPlugin\MauticFocusBundle\Form\Type;
 
+use MauticPlugin\MauticFocusBundle\Entity\FocusRepository;
 use MauticPlugin\MauticFocusBundle\Model\FocusModel;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -11,14 +12,15 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * @extends AbstractType<array<string, mixed>|null>
  */
-class FocusListType extends AbstractType
+final class FocusListType extends AbstractType
 {
-    private $repo;
+    private readonly FocusRepository $repo;
 
     public function __construct(
         protected FocusModel $focusModel,
+        private readonly FocusRepository $focusRepository,
     ) {
-        $this->repo       = $this->focusModel->getRepository();
+        $this->repo       = $this->focusRepository;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -50,7 +52,7 @@ class FocusListType extends AbstractType
         );
     }
 
-    public function getParent(): ?string
+    public function getParent(): string
     {
         return ChoiceType::class;
     }

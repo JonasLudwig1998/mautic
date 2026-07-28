@@ -10,6 +10,8 @@ use Psr\Cache\InvalidArgumentException;
 
 class SegmentCountCacheHelper
 {
+    use SegmentCountCacheOperationsTrait;
+
     public function __construct(
         private readonly CacheProviderInterface $cacheProvider,
         private readonly CoreParametersHelper $coreParametersHelper,
@@ -21,7 +23,7 @@ class SegmentCountCacheHelper
      */
     public function getSegmentContactCount(int $segmentId): int
     {
-        return (int) $this->cacheProvider->getItem($this->generateCacheKey($segmentId))->get();
+        return $this->getCount($this->generateCacheKey($segmentId));
     }
 
     /**
@@ -29,15 +31,7 @@ class SegmentCountCacheHelper
      */
     public function setSegmentContactCount(int $segmentId, int $count): void
     {
-        $item = $this->cacheProvider->getItem($this->generateCacheKey($segmentId));
-        $item->set($count);
-
-        $ttl = $this->coreParametersHelper->get('segment_api_count_cache_ttl', 43200);
-        if ($ttl) {
-            $item->expiresAfter($ttl);
-        }
-
-        $this->cacheProvider->save($item);
+        $this->setCount($this->generateCacheKey($segmentId), $count, $this->getTtl());
 
         if ($this->hasSegmentIdForReCount($segmentId)) {
             $this->cacheProvider->deleteItem($this->generateCacheKeyForRecount($segmentId));
@@ -49,7 +43,7 @@ class SegmentCountCacheHelper
      */
     public function hasSegmentContactCount(int $segmentId): bool
     {
-        return $this->cacheProvider->hasItem($this->generateCacheKey($segmentId));
+        return $this->hasCount($this->generateCacheKey($segmentId));
     }
 
     /**
@@ -75,8 +69,8 @@ class SegmentCountCacheHelper
      */
     public function incrementSegmentContactCount(int $segmentId): void
     {
-        $count = $this->hasSegmentContactCount($segmentId) ? $this->getSegmentContactCount($segmentId) : 0;
-        $this->setSegmentContactCount($segmentId, ++$count);
+        $this->incrementCount($this->generateCacheKey($segmentId), $this->getTtl());
+        $this->clearRecountMarker($segmentId);
     }
 
     /**
@@ -84,9 +78,7 @@ class SegmentCountCacheHelper
      */
     public function deleteSegmentContactCount(int $segmentId): void
     {
-        if ($this->hasSegmentContactCount($segmentId)) {
-            $this->cacheProvider->deleteItem($this->generateCacheKey($segmentId));
-        }
+        $this->deleteCount($this->generateCacheKey($segmentId));
     }
 
     /**
@@ -94,14 +86,20 @@ class SegmentCountCacheHelper
      */
     public function decrementSegmentContactCount(int $segmentId): void
     {
-        if ($this->hasSegmentContactCount($segmentId)) {
-            $count = $this->getSegmentContactCount($segmentId);
+        if ($this->decrementCount($this->generateCacheKey($segmentId), $this->getTtl())) {
+            $this->clearRecountMarker($segmentId);
+        }
+    }
 
-            if ($count <= 0) {
-                $count = 1;
-            }
+    private function getTtl(): mixed
+    {
+        return $this->coreParametersHelper->get('segment_api_count_cache_ttl', 43200);
+    }
 
-            $this->setSegmentContactCount($segmentId, --$count);
+    private function clearRecountMarker(int $segmentId): void
+    {
+        if ($this->hasSegmentIdForReCount($segmentId)) {
+            $this->cacheProvider->deleteItem($this->generateCacheKeyForRecount($segmentId));
         }
     }
 

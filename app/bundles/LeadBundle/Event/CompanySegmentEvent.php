@@ -9,7 +9,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 abstract class CompanySegmentEvent extends Event
 {
-    public function __construct(private CompanySegment $companySegment)
+    public function __construct(private readonly CompanySegment $companySegment)
     {
     }
 

@@ -57,24 +57,24 @@ final class BatchCompanySegmentControllerTest extends MauticMysqlTestCase
 
         $this->em->clear();
         $segment = $this->em->getRepository(\Mautic\LeadBundle\Entity\CompanySegment::class)->find($segmentId);
-        $this->assertNotNull($segment);
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\CompanySegment::class, $segment);
 
         $this->assertCount(3, $segment->getSegmentCompanies());
 
         $segmentCompany = $segment->getSegmentCompanies()->get(0);
-        $this->assertNotNull($segmentCompany);
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\SegmentCompany::class, $segmentCompany);
         $this->assertTrue($segmentCompany->isManuallyAdded());
         $this->assertFalse($segmentCompany->isManuallyRemoved());
         $this->assertSame($companyA->getId(), $segmentCompany->getCompany()->getId());
 
         $segmentCompany = $segment->getSegmentCompanies()->get(1);
-        $this->assertNotNull($segmentCompany);
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\SegmentCompany::class, $segmentCompany);
         $this->assertTrue($segmentCompany->isManuallyAdded());
         $this->assertFalse($segmentCompany->isManuallyRemoved());
         $this->assertSame($companyB->getId(), $segmentCompany->getCompany()->getId());
 
         $segmentCompany = $segment->getSegmentCompanies()->get(2);
-        $this->assertNotNull($segmentCompany);
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\SegmentCompany::class, $segmentCompany);
         $this->assertTrue($segmentCompany->isManuallyAdded());
         $this->assertFalse($segmentCompany->isManuallyRemoved());
         $this->assertSame($companyC->getId(), $segmentCompany->getCompany()->getId());
@@ -83,7 +83,7 @@ final class BatchCompanySegmentControllerTest extends MauticMysqlTestCase
         $this->assertNotFalse($content);
         $response = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
         $this->assertIsArray($response);
-        $this->assertTrue(isset($response['closeModal']));
+        $this->assertArrayHasKey('closeModal', $response);
         $this->assertTrue($response['closeModal']);
         $this->assertIsString($response['flashes']);
         $this->assertStringContainsString('3 companies affected', $response['flashes']);
@@ -119,7 +119,7 @@ final class BatchCompanySegmentControllerTest extends MauticMysqlTestCase
 
         $this->em->clear();
         $segment = $this->em->getRepository(\Mautic\LeadBundle\Entity\CompanySegment::class)->find($segmentId);
-        $this->assertNotNull($segment);
+        $this->assertInstanceOf(\Mautic\LeadBundle\Entity\CompanySegment::class, $segment);
 
         $this->assertCount(0, $segment->getSegmentCompanies());
 
@@ -127,7 +127,7 @@ final class BatchCompanySegmentControllerTest extends MauticMysqlTestCase
         $this->assertNotFalse($content);
         $response = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
         $this->assertIsArray($response);
-        $this->assertTrue(isset($response['closeModal']));
+        $this->assertArrayHasKey('closeModal', $response);
         $this->assertTrue($response['closeModal']);
         $this->assertIsString($response['flashes']);
         $this->assertStringContainsString('3 companies affected', $response['flashes']);

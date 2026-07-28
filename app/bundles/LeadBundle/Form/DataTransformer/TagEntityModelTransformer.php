@@ -10,7 +10,7 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
 /**
  * @implements DataTransformerInterface<array<mixed>|int|null, array<mixed>|object|null>
  */
-class TagEntityModelTransformer implements DataTransformerInterface
+final class TagEntityModelTransformer implements DataTransformerInterface
 {
     /**
      * @param string $repository
@@ -26,7 +26,7 @@ class TagEntityModelTransformer implements DataTransformerInterface
     public function reverseTransform(mixed $entity): mixed
     {
         if (!$this->isArray) {
-            if (is_null($entity) || !is_object($entity)) {
+            if (null === $entity || !is_object($entity)) {
                 return null;
             }
 

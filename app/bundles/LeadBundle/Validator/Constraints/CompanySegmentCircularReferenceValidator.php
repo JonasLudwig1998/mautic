@@ -19,13 +19,13 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 class CompanySegmentCircularReferenceValidator extends ConstraintValidator
 {
     public function __construct(
-        private CompanySegmentModel $model,
-        private RequestStack $requestStack,
+        private readonly CompanySegmentModel $model,
+        private readonly RequestStack $requestStack,
     ) {
     }
 
     /**
-     * @phpstan-param array<mixed>|mixed $filters
+     * @param array<mixed>|mixed $filters
      */
     public function validate($filters, Constraint $constraint): void
     {
@@ -110,6 +110,6 @@ class CompanySegmentCircularReferenceValidator extends ConstraintValidator
      */
     private function flatten(array $array): array
     {
-        return array_unique(array_reduce($array, 'array_merge', []));
+        return array_unique(array_reduce($array, array_merge(...), []));
     }
 }

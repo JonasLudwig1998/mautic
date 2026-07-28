@@ -14,12 +14,12 @@ final class CompanySegmentFilteringEvent extends Event
 
     private string $subQuery;
 
-    private string $companiesTableAlias;
+    private readonly string $companiesTableAlias;
 
     public function __construct(
         private ContactSegmentFilterCrate $details,
-        private string $alias,
-        private QueryBuilder $queryBuilder,
+        private readonly string $alias,
+        private readonly QueryBuilder $queryBuilder,
     ) {
         $this->isFilteringDone = false;
         $this->subQuery        = '';

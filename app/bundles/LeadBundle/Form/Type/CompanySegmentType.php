@@ -28,9 +28,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class CompanySegmentType extends AbstractType
 {
     public function __construct(
-        private CompanySegmentModel $companySegmentModel,
-        private TranslatorInterface $translator,
-        private RelativeDate $relativeDate,
+        private readonly CompanySegmentModel $companySegmentModel,
+        private readonly TranslatorInterface $translator,
+        private readonly RelativeDate $relativeDate,
     ) {
     }
 

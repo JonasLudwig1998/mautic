@@ -17,6 +17,7 @@ use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\DoNotContact;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
+use Mautic\PluginBundle\Entity\IntegrationEntity;
 use Mautic\PluginBundle\Entity\IntegrationEntityRepository;
 use Mautic\PluginBundle\Model\IntegrationEntityModel;
 use Mautic\StageBundle\Entity\Stage;
@@ -32,6 +33,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @method HubspotApi getApiHelper()
+ *
+ * @extends CrmAbstractIntegration<HubspotApi>
  */
 class HubspotIntegration extends CrmAbstractIntegration
 {
@@ -425,10 +428,9 @@ class HubspotIntegration extends CrmAbstractIntegration
     }
 
     /**
-     * @param array $params
-     * @param bool  $id
+     * @param bool $id
      */
-    public function getCompanies($params = [], $id = false, &$executed = null)
+    public function getCompanies(array $params = [], $id = false, &$executed = null)
     {
         $results = [];
         try {
@@ -602,7 +604,7 @@ class HubspotIntegration extends CrmAbstractIntegration
 
             if (!empty($leadData['vid'])) {
                 /** @var IntegrationEntityRepository $integrationEntityRepo */
-                $integrationEntityRepo = $this->em->getRepository(\Mautic\PluginBundle\Entity\IntegrationEntity::class);
+                $integrationEntityRepo = $this->em->getRepository(IntegrationEntity::class);
                 $integrationId         = $integrationEntityRepo->getIntegrationsEntityId($this->getName(), $object, 'lead', $lead->getId());
                 $integrationEntity     = (empty($integrationId)) ?
                     $this->createIntegrationEntity(

@@ -40,7 +40,7 @@ final class SegmentSubscriberTest extends TestCase
 
     private SegmentCountCacheHelper&\PHPUnit\Framework\MockObject\Stub $segmentCountCacheHelper;
 
-    private CompanySegmentModel&MockObject $companySegmentModel;
+    private CompanySegmentModel&\PHPUnit\Framework\MockObject\Stub $companySegmentModel;
 
     protected function setUp(): void
     {
@@ -51,7 +51,7 @@ final class SegmentSubscriberTest extends TestCase
         $this->listModel                       = $this->createMock(ListModel::class);
         $this->coreParametersHelper            = $this->createMock(CoreParametersHelper::class);
         $this->segmentCountCacheHelper         = $this->createStub(SegmentCountCacheHelper::class);
-        $this->companySegmentModel             = $this->createMock(CompanySegmentModel::class);
+        $this->companySegmentModel             = $this->createStub(CompanySegmentModel::class);
         $this->coreParametersHelper->method('get')->willReturnCallback(fn (): false => false);
     }
 

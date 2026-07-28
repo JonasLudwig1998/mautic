@@ -9,7 +9,7 @@ use Mautic\LeadBundle\Model\CompanySegmentModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-final class CompanySegmentSubscriber implements EventSubscriberInterface
+final readonly class CompanySegmentSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private CompanySegmentModel $companySegmentModel,

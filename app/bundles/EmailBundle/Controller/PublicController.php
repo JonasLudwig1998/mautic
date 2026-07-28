@@ -8,6 +8,7 @@ use Mautic\CoreBundle\Helper\TrackingPixelHelper;
 use Mautic\CoreBundle\Twig\Helper\AnalyticsHelper;
 use Mautic\CoreBundle\Twig\Helper\AssetsHelper;
 use Mautic\EmailBundle\EmailEvents;
+use Mautic\EmailBundle\Entity\Email;
 use Mautic\EmailBundle\Entity\Stat;
 use Mautic\EmailBundle\Event\EmailSendEvent;
 use Mautic\EmailBundle\Event\TransportWebhookEvent;
@@ -34,25 +35,38 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Contracts\Service\Attribute\Required;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class PublicController extends CommonFormController
+final class PublicController extends CommonFormController
 {
     use FrequencyRuleTrait;
 
-    /**
-     * @return Response
-     */
-    public function indexAction(Request $request, AnalyticsHelper $analyticsHelper, $idHash)
+    private \Mautic\LeadBundle\Entity\LeadRepository $leadRepository;
+
+    private EmailModel $emailModel;
+
+    private LeadModel $leadModel;
+
+    #[Required]
+    public function autowirePublicController(
+        LeadModel $leadModel,
+        EmailModel $emailModel,
+        \Mautic\LeadBundle\Entity\LeadRepository $leadRepository,
+    ): void {
+        $this->leadModel = $leadModel;
+        $this->emailModel = $emailModel;
+        $this->leadRepository = $leadRepository;
+    }
+
+    public function indexAction(Request $request, AnalyticsHelper $analyticsHelper, $idHash): Response
     {
-        /** @var EmailModel $model */
-        $model = $this->getModel('email');
-        $stat  = $model->getEmailStatus($idHash);
+        $stat  = $this->emailModel->getEmailStatus($idHash);
 
         if (!empty($stat)) {
             if ($this->security->isAnonymous()) {
-                $model->hitEmail($stat, $request, true);
+                $this->emailModel->hitEmail($stat, $request, true);
             }
 
             $tokens = $stat->getTokens();
@@ -80,9 +94,9 @@ class PublicController extends CommonFormController
             // Add subject as title
             if (!empty($subject)) {
                 if (str_contains($content, '<title></title>')) {
-                    $content = str_replace('<title></title>', "<title>$subject</title>", $content);
+                    $content = str_replace('<title></title>', "<title>{$subject}</title>", $content);
                 } elseif (!str_contains($content, '<title>')) {
-                    $content = str_replace('<head>', "<head>\n<title>$subject</title>", $content);
+                    $content = str_replace('<head>', "<head>\n<title>{$subject}</title>", $content);
                 }
             }
 
@@ -102,22 +116,18 @@ class PublicController extends CommonFormController
             $messageBus->dispatch(new EmailHitNotification($idHash, $request));
         } catch (\Exception $exception) {
             $logger->error($exception->getMessage(), ['idHash' => $idHash]);
-            $emailModel = $this->getModel('email');
-            assert($emailModel instanceof EmailModel);
 
-            $emailModel->hitEmail($idHash, $request);
+            $this->emailModel->hitEmail($idHash, $request);
         }
 
         return TrackingPixelHelper::getResponse($request);
     }
 
     /**
-     * @return Response
-     *
      * @throws \Exception
      * @throws \Mautic\CoreBundle\Exception\FileNotFoundException
      */
-    public function unsubscribeAction(Request $request, ContactTracker $contactTracker, EmailModel $model, LeadModel $leadModel, FormModel $formModel, PageModel $pageModel, MailHashHelper $mailHash, ThemeHelper $themeHelper, $idHash, ?string $urlEmail = null, ?string $secretHash = null)
+    public function unsubscribeAction(Request $request, ContactTracker $contactTracker, EmailModel $model, LeadModel $leadModel, FormModel $formModel, PageModel $pageModel, MailHashHelper $mailHash, ThemeHelper $themeHelper, $idHash, ?string $urlEmail = null, ?string $secretHash = null): Response
     {
         $stat                   = $model->getEmailStatus($idHash);
         $message                = '';
@@ -128,6 +138,7 @@ class PublicController extends CommonFormController
         $isOneClickUnsubscribe  = $request->isMethod(Request::METHOD_POST) && 'One-Click' === $request->get('List-Unsubscribe');
         $isUnsubscribeAll       = $request->get('unsubscribe_all');
         $showContactPreferences = $this->coreParametersHelper->get('show_contact_preferences');
+        $isHeadRequest          = $request->isMethod(Request::METHOD_HEAD);
 
         if ($request->isMethod(Request::METHOD_POST) && 'One-Click' === $request->get('List-Unsubscribe')) {
             return $this->oneClickUnsubscribe($model, $stat);
@@ -178,8 +189,7 @@ class PublicController extends CommonFormController
                 // share the same session/device and the contact is known.
                 $successSessionName .= ".{$lead->getId()}";
             } elseif (empty($stat)) {
-                $leadRepo = $leadModel->getRepository();
-                $contacts = $leadRepo->getContactsByEmail($urlEmail);
+                $contacts = $this->leadRepository->getContactsByEmail($urlEmail);
                 $lead     = null;
                 if (is_array($contacts) && count($contacts) > 0) {
                     $lead  = array_pop($contacts);
@@ -188,7 +198,7 @@ class PublicController extends CommonFormController
                 }
             }
 
-            if (!$showContactPreferences || $isUnsubscribeAll) {
+            if (!$isHeadRequest && (!$showContactPreferences || $isUnsubscribeAll)) {
                 if (!empty($stat)) {
                     $message = $this->getUnsubscribeMessage($idHash, $model, $stat, $this->translator);
                 } elseif ($lead && $lead instanceof Lead) {
@@ -225,8 +235,12 @@ class PublicController extends CommonFormController
 
                 $formView = $form->createView();
 
-                /** @var Page $prefCenter */
-                if ($email && ($prefCenter = $email->getPreferenceCenter()) && $prefCenter->getIsPreferenceCenter()) {
+                $prefCenter = null;
+                if ($email instanceof Email) {
+                    $prefCenter = $email->getPreferenceCenter();
+                }
+
+                if ($prefCenter instanceof Page && $prefCenter->getIsPreferenceCenter()) {
                     // Set the page language if there is no lead preferred locale
                     if (empty($language) && $language = $prefCenter->getLanguage()) {
                         $this->translator->setLocale($language);
@@ -300,7 +314,7 @@ class PublicController extends CommonFormController
     {
         $request->attributes->set('unsubscribe_all', 1);
 
-        return $this->forward(static::class.'::unsubscribeAction', [
+        return $this->forward(self::class.'::unsubscribeAction', [
             'request'    => $request,
             'idHash'     => $idHash,
             'urlEmail'   => $urlEmail,
@@ -412,8 +426,6 @@ class PublicController extends CommonFormController
 
     /**
      * Preview email.
-     *
-     * @return Response
      */
     public function previewAction(
         AnalyticsHelper $analyticsHelper,
@@ -426,7 +438,7 @@ class PublicController extends CommonFormController
         FakeContactHelper $fakeLeadHelper,
         string $objectId,
         ?string $objectType = null,
-    ) {
+    ): Response {
         $contactId   = (int) $request->query->get('contactId');
         $emailEntity = $model->getEntity($objectId);
 
@@ -497,7 +509,7 @@ class PublicController extends CommonFormController
         if ($contactId) {
             // We have one from request parameter
             /** @var LeadModel $leadModel */
-            $contact = $leadModel->getRepository()->getLead($contactId);
+            $contact = $this->leadRepository->getLead($contactId);
             $contact = $model->enrichedContactWithCompanies($contact);
         } else {
             // Make fake contact.
@@ -596,19 +608,13 @@ class PublicController extends CommonFormController
             $logger->log('error', $integration.': '.json_encode($query, JSON_PRETTY_PRINT));
         }
 
-        /** @var EmailModel $model */
-        $model = $this->getModel('email');
-
         // email is a semicolon delimited list of emails
         $emails    = explode(';', $query['email']);
-        $leadModel = $this->getModel('lead');
-        \assert($leadModel instanceof LeadModel);
-        $repo = $leadModel->getRepository();
 
         foreach ($emails as $email) {
-            $lead = $repo->getLeadByEmail($email);
+            $lead = $this->leadRepository->getLeadByEmail($email);
             if (null === $lead) {
-                $lead = $this->createLead($email, $repo);
+                $lead = $this->createLead($email);
                 if (null === $lead) {
                     continue;
                 }
@@ -617,7 +623,7 @@ class PublicController extends CommonFormController
             $idHash = hash('crc32', $email.$query['body']);
             $idHash = substr($idHash.$idHash, 0, 13); // 13 bytes length
 
-            $stat = $model->getEmailStatus($idHash);
+            $stat = $this->emailModel->getEmailStatus($idHash);
 
             // stat doesn't exist, create one
             if (null === $stat) {
@@ -628,7 +634,7 @@ class PublicController extends CommonFormController
             $stat->setSource('email.client');
 
             if ($stat || 'Outlook' !== $integration) { // Outlook requests the tracking gif on send
-                $model->hitEmail($idHash, $request); // add email event
+                $this->emailModel->hitEmail($idHash, $request); // add email event
             }
         }
     }
@@ -671,19 +677,17 @@ class PublicController extends CommonFormController
         return null;
     }
 
-    private function createLead(string $email, $repo): ?Lead
+    private function createLead(string $email): ?array
     {
-        $model = $this->getModel('lead.lead');
-        \assert($model instanceof LeadModel);
-        $lead  = $model->getEntity();
+        $lead  = $this->leadModel->getEntity();
         // set custom field values
         $data = ['email' => $email];
-        $model->setFieldValues($lead, $data, true);
+        $this->leadModel->setFieldValues($lead, $data, true);
         // create lead
-        $model->saveEntity($lead);
+        $this->leadModel->saveEntity($lead);
 
         // return entity
-        return $repo->getLeadByEmail($email);
+        return $this->leadRepository->getLeadByEmail($email);
     }
 
     public function getUnsubscribeMessage(string $idHash, $model, $stat, TranslatorInterface $translator): string

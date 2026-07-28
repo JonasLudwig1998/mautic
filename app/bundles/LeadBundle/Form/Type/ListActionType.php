@@ -8,36 +8,17 @@ use Symfony\Component\Form\FormBuilderInterface;
 /**
  * @extends AbstractType<mixed>
  */
-class ListActionType extends AbstractType
+final class ListActionType extends AbstractType
 {
+    use SegmentFormBuilderTrait;
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add(
-            'addToLists',
+        $this->addActionFields(
+            $builder,
             LeadListType::class,
-            [
-                'label'      => 'mautic.lead.lead.events.addtolists',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class' => 'form-control',
-                ],
-                'multiple' => true,
-                'expanded' => false,
-            ]
-        );
-
-        $builder->add(
-            'removeFromLists',
-            LeadListType::class,
-            [
-                'label'      => 'mautic.lead.lead.events.removefromlists',
-                'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class' => 'form-control',
-                ],
-                'multiple' => true,
-                'expanded' => false,
-            ]
+            'mautic.lead.lead.events.addtolists',
+            'mautic.lead.lead.events.removefromlists'
         );
     }
 

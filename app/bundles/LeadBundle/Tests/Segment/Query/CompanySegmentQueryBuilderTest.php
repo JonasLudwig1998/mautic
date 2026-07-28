@@ -14,12 +14,11 @@ use Mautic\LeadBundle\Entity\SegmentCompany;
 use Mautic\LeadBundle\Segment\Query\CompanySegmentQueryBuilder;
 use Mautic\LeadBundle\Segment\Query\QueryBuilder;
 use Mautic\LeadBundle\Segment\RandomParameterName;
-use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
-class CompanySegmentQueryBuilderTest extends TestCase
+final class CompanySegmentQueryBuilderTest extends TestCase
 {
     use MockedConnectionTrait;
 
@@ -39,19 +38,16 @@ class CompanySegmentQueryBuilderTest extends TestCase
         $companyRepository->method('getTableAlias')->willReturn('comp');
 
         $filterQueryBuilder = new CompanySegmentQueryBuilder(
-            $this->createMock(EntityManager::class),
+            $this->createStub(EntityManager::class),
             $companyRepository,
-            $this->createMock(CompanySegmentRepository::class),
+            $this->createStub(CompanySegmentRepository::class),
             new RandomParameterName(),
             new EventDispatcher(),
-            $this->createMock(LoggerInterface::class)
+            $this->createStub(LoggerInterface::class)
         );
 
-        Assert::assertSame($queryBuilder, $filterQueryBuilder->addNewCompaniesRestrictions($queryBuilder, $companySegment));
-        Assert::assertSame(
-            'SELECT 1 FROM '.MAUTIC_TABLE_PREFIX.'companies comp WHERE (NULL) AND (comp.id NOT IN (SELECT par0.company_id FROM '.MAUTIC_TABLE_PREFIX.SegmentCompany::TABLE_NAME.' par0 WHERE par0.segment_id = 8))',
-            $queryBuilder->getDebugOutput()
-        );
+        $this->assertSame($queryBuilder, $filterQueryBuilder->addNewCompaniesRestrictions($queryBuilder, $companySegment));
+        $this->assertSame('SELECT 1 FROM '.MAUTIC_TABLE_PREFIX.'companies comp WHERE (NULL) AND (comp.id NOT IN (SELECT par0.company_id FROM '.MAUTIC_TABLE_PREFIX.SegmentCompany::TABLE_NAME.' par0 WHERE par0.segment_id = 8))', $queryBuilder->getDebugOutput());
     }
 
     /**
@@ -84,19 +80,16 @@ class CompanySegmentQueryBuilderTest extends TestCase
         $companyRepository->method('getTableAlias')->willReturn('comp');
 
         $filterQueryBuilder = new CompanySegmentQueryBuilder(
-            $this->createMock(EntityManager::class),
+            $this->createStub(EntityManager::class),
             $companyRepository,
-            $this->createMock(CompanySegmentRepository::class),
+            $this->createStub(CompanySegmentRepository::class),
             new RandomParameterName(),
             new EventDispatcher(),
-            $this->createMock(LoggerInterface::class)
+            $this->createStub(LoggerInterface::class)
         );
 
-        Assert::assertSame($queryBuilder, $filterQueryBuilder->addNewCompaniesRestrictions($queryBuilder, $companySegment, $batchLimiters));
-        Assert::assertSame(
-            'SELECT 1 FROM '.MAUTIC_TABLE_PREFIX.'companies comp WHERE (NULL) AND (comp.id NOT IN (SELECT par0.company_id FROM '.MAUTIC_TABLE_PREFIX.SegmentCompany::TABLE_NAME.' par0 WHERE (par0.segment_id = 8) AND ('.$expectedWhereClause.')))',
-            $queryBuilder->getDebugOutput()
-        );
+        $this->assertSame($queryBuilder, $filterQueryBuilder->addNewCompaniesRestrictions($queryBuilder, $companySegment, $batchLimiters));
+        $this->assertSame('SELECT 1 FROM '.MAUTIC_TABLE_PREFIX.'companies comp WHERE (NULL) AND (comp.id NOT IN (SELECT par0.company_id FROM '.MAUTIC_TABLE_PREFIX.SegmentCompany::TABLE_NAME.' par0 WHERE (par0.segment_id = 8) AND ('.$expectedWhereClause.')))', $queryBuilder->getDebugOutput());
     }
 
     private function createConnection(): Connection

@@ -46,7 +46,6 @@ use Mautic\LeadBundle\Model\CompanySegmentModel;
 use Mautic\LeadBundle\Model\DoNotContact;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
-use Mautic\LeadBundle\Model\ListModel;
 use Mautic\LeadBundle\Provider\FilterOperatorProvider;
 use Mautic\LeadBundle\Segment\OperatorOptions;
 use Mautic\PointBundle\Model\PointGroupModel;
@@ -62,7 +61,6 @@ final class CampaignSubscriber implements EventSubscriberInterface
         private readonly IpLookupHelper $ipLookupHelper,
         private readonly LeadModel $leadModel,
         private readonly FieldModel $leadFieldModel,
-        private readonly ListModel $listModel,
         private readonly CompanyModel $companyModel,
         private readonly CompanySegmentModel $companySegmentModel,
         private readonly CampaignModel $campaignModel,
@@ -70,6 +68,9 @@ final class CampaignSubscriber implements EventSubscriberInterface
         private readonly DoNotContact $doNotContact,
         private readonly PointGroupModel $groupModel,
         private readonly FilterOperatorProvider $filterOperatorProvider,
+        private readonly \Mautic\LeadBundle\Entity\LeadListRepository $leadListRepository,
+        private readonly \Mautic\LeadBundle\Entity\LeadRepository $leadRepository,
+        private readonly \Mautic\LeadBundle\Entity\LeadFieldRepository $leadFieldRepository,
     ) {
     }
 
@@ -583,14 +584,13 @@ final class CampaignSubscriber implements EventSubscriberInterface
             $tagRepo = $this->leadModel->getTagRepository();
             $result  = $tagRepo->checkLeadByTags($lead, $event->getConfig()['tags']);
         } elseif ($event->checkContext('lead.segments')) {
-            $listRepo = $this->listModel->getRepository();
-            $result   = $listRepo->checkLeadSegmentsByIds($lead, $event->getConfig()['segments']);
+            $result = $this->leadListRepository->checkLeadSegmentsByIds($lead, $event->getConfig()['segments']);
         } elseif ($event->checkContext('lead.company_segments')) {
             $result = $this->checkCompanySegmentMembership($lead, $event->getConfig()['companySegments'] ?? []);
         } elseif ($event->checkContext('lead.stages')) {
-            $result   = $this->leadModel->getRepository()->isContactInOneOfStages($lead, $event->getConfig()['stages']);
+            $result   = $this->leadRepository->isContactInOneOfStages($lead, $event->getConfig()['stages']);
         } elseif ($event->checkContext('lead.owner')) {
-            $result = $this->leadModel->getRepository()->checkLeadOwner($lead, $event->getConfig()['owner']);
+            $result = $this->leadRepository->checkLeadOwner($lead, $event->getConfig()['owner']);
         } elseif ($event->checkContext('lead.attached')) {
             $result = $this->onCampaignTriggerConditionContactAdded($event);
         } elseif ($event->checkContext('lead.campaigns')) {
@@ -613,7 +613,7 @@ final class CampaignSubscriber implements EventSubscriberInterface
                      * note: currently mautic campaign only one time execution
                      * ( to integrate with: recursive campaign (future)).
                      */
-                    $result = $this->leadFieldModel->getRepository()->compareDateMonthValue(
+                    $result = $this->leadFieldRepository->compareDateMonthValue(
                         $lead->getId(), $event->getConfig()['field'], $triggerDate);
                 }
             } else {
@@ -637,13 +637,13 @@ final class CampaignSubscriber implements EventSubscriberInterface
 
                 // Preventing date/datetime fields to fail on empty/notEmpty
                 if (in_array($fieldType, ['date', 'datetime']) && in_array($operator, ['empty', '!empty'])) {
-                    $result     = $this->leadFieldModel->getRepository()->compareEmptyDateValue(
+                    $result     = $this->leadFieldRepository->compareEmptyDateValue(
                         $lead->getId(),
                         $field,
                         $operators[$operator]['expr']
                     );
                 } else {
-                    $result     = $this->leadFieldModel->getRepository()->compareValue(
+                    $result     = $this->leadFieldRepository->compareValue(
                         $lead->getId(),
                         $field,
                         $fieldValue,
@@ -759,7 +759,7 @@ final class CampaignSubscriber implements EventSubscriberInterface
                     $lead->getId(), $group, $score, $operatorExpr,
                 );
             } else {
-                $result = $this->leadFieldModel->getRepository()->compareValue(
+                $result = $this->leadFieldRepository->compareValue(
                     $lead->getId(), 'points', $score, $operatorExpr
                 );
             }
@@ -849,7 +849,7 @@ final class CampaignSubscriber implements EventSubscriberInterface
      */
     private function compareDateValue(Lead $lead, CampaignExecutionEvent $event, \DateTime $triggerDate): bool
     {
-        return $this->leadFieldModel->getRepository()->compareDateValue(
+        return $this->leadFieldRepository->compareDateValue(
             $lead->getId(),
             $event->getConfig()['field'],
             $triggerDate->format('Y-m-d')

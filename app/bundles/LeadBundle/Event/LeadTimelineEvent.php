@@ -7,7 +7,7 @@ use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use Symfony\Contracts\EventDispatcher\Event;
 
-class LeadTimelineEvent extends Event
+final class LeadTimelineEvent extends Event
 {
     /**
      * Container with all filtered events.
@@ -151,7 +151,7 @@ class LeadTimelineEvent extends Event
                 $this->events[$data['event']] = [];
             }
 
-            if (!$this->isForTimeline()) {
+            if (!$this->forTimeline) {
                 // standardize the payload
                 $keepThese = [
                     'event'      => true,
@@ -445,7 +445,7 @@ class LeadTimelineEvent extends Event
         if (is_array($count)) {
             if (isset($count['total'])) {
                 $this->totalEvents[$eventType] += $count['total'];
-            } elseif ($this->isEngagementCount() && $this->groupUnit) {
+            } elseif ($this->countOnly && $this->groupUnit) {
                 // Group counts across events by unit
                 foreach ($count as $key => $data) {
                     if (!isset($this->totalEventsByUnit[$key])) {
@@ -465,7 +465,7 @@ class LeadTimelineEvent extends Event
     /**
      * Subtract from the total counter if there is an event that was skipped for whatever reason.
      */
-    public function subtractFromCounter($eventType, $count = 1): void
+    public function subtractFromCounter(string $eventType, $count = 1): void
     {
         $this->totalEvents[$eventType] -= $count;
     }

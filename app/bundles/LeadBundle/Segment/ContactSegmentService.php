@@ -6,15 +6,17 @@ use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Segment\Query\ContactSegmentQueryBuilder;
 use Mautic\LeadBundle\Segment\Query\LeadBatchLimiterTrait;
 use Mautic\LeadBundle\Segment\Query\QueryBuilder;
+use Psr\Log\LoggerInterface;
 
 class ContactSegmentService
 {
     use LeadBatchLimiterTrait;
+    use SegmentQueryExecutionTrait;
 
     public function __construct(
         private ContactSegmentFilterFactory $contactSegmentFilterFactory,
         private ContactSegmentQueryBuilder $contactSegmentQueryBuilder,
-        private \Psr\Log\LoggerInterface $logger,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -51,7 +53,7 @@ class ContactSegmentService
 
         $this->logger->debug('Segment QB: Create SQL: '.$qb->getDebugOutput(), ['segmentId' => $segment->getId()]);
 
-        $result = $this->timedFetch($qb, $segment->getId());
+        $result = $this->timedFetch($qb, $segment->getId(), 'Segment QB');
 
         return [$segment->getId() => $result];
     }
@@ -86,7 +88,7 @@ class ContactSegmentService
 
         $this->logger->debug('Segment QB: Create SQL: '.$qb->getDebugOutput(), ['segmentId' => $segment->getId()]);
 
-        $result = $this->timedFetch($qb, $segment->getId());
+        $result = $this->timedFetch($qb, $segment->getId(), 'Segment QB');
 
         return [$segment->getId() => $result];
     }
@@ -104,7 +106,7 @@ class ContactSegmentService
         $queryBuilder = $this->getNewLeadListLeadsQueryBuilder($segment, $batchLimiters);
         $queryBuilder->setMaxResults($limit);
 
-        $result = $this->timedFetchAll($queryBuilder, $segment->getId());
+        $result = $this->timedFetchAll($queryBuilder, $segment->getId(), 'Segment QB');
 
         return [$segment->getId() => $result];
     }
@@ -167,7 +169,7 @@ class ContactSegmentService
 
         $this->logger->debug('Segment QB: Orphan Leads Count SQL: '.$queryBuilder->getDebugOutput(), ['segmentId' => $segment->getId()]);
 
-        $result = $this->timedFetch($queryBuilder, $segment->getId());
+        $result = $this->timedFetch($queryBuilder, $segment->getId(), 'Segment QB');
 
         return [$segment->getId() => $result];
     }
@@ -184,7 +186,7 @@ class ContactSegmentService
 
         $this->logger->debug('Segment QB: Orphan Leads SQL: '.$queryBuilder->getDebugOutput(), ['segmentId' => $segment->getId()]);
 
-        $result = $this->timedFetchAll($queryBuilder, $segment->getId());
+        $result = $this->timedFetchAll($queryBuilder, $segment->getId(), 'Segment QB');
 
         return [$segment->getId() => $result];
     }
@@ -265,83 +267,5 @@ class ContactSegmentService
     {
         $leadsTableAlias = $queryBuilder->getTableAlias(MAUTIC_TABLE_PREFIX.'leads');
         $queryBuilder->andWhere($queryBuilder->expr()->isNotNull($leadsTableAlias.'.date_identified'));
-    }
-
-    /***** DEBUG *****/
-
-    /**
-     * Formatting helper.
-     *
-     * @return string
-     */
-    private function formatPeriod($inputSeconds)
-    {
-        $now = \DateTime::createFromFormat('U.u', number_format($inputSeconds, 6, '.', ''));
-
-        return $now->format('H:i:s.u');
-    }
-
-    /**
-     * @param int $segmentId
-     *
-     * @return mixed
-     *
-     * @throws \Exception
-     */
-    private function timedFetch(QueryBuilder $qb, $segmentId)
-    {
-        try {
-            $start = microtime(true);
-
-            $result = $qb->executeQuery()->fetchAssociative();
-
-            $end = microtime(true) - $start;
-
-            $this->logger->debug('Segment QB: Query took: '.$this->formatPeriod($end).', Result count: '.count($result), ['segmentId' => $segmentId]);
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Segment QB: Query Exception: '.$e->getMessage(),
-                [
-                    'query'      => $qb->getSQL(),
-                    'parameters' => $qb->getParameters(),
-                ]
-            );
-            throw $e;
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param int $segmentId
-     *
-     * @return mixed
-     *
-     * @throws \Exception
-     */
-    private function timedFetchAll(QueryBuilder $qb, $segmentId)
-    {
-        try {
-            $start  = microtime(true);
-            $result = $qb->executeQuery()->fetchAllAssociative();
-
-            $end = microtime(true) - $start;
-
-            $this->logger->debug(
-                'Segment QB: Query took: '.$this->formatPeriod($end).'ms. Result count: '.count($result),
-                ['segmentId' => $segmentId]
-            );
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Segment QB: Query Exception: '.$e->getMessage(),
-                [
-                    'query'      => $qb->getSQL(),
-                    'parameters' => $qb->getParameters(),
-                ]
-            );
-            throw $e;
-        }
-
-        return $result;
     }
 }

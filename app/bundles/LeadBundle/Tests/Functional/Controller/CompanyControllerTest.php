@@ -64,7 +64,7 @@ final class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertResponseIsSuccessful();
 
         $content = $this->client->getResponse()->getContent();
-        $this->assertStringContainsString('No Results Found', $content);
+        $this->assertStringContainsString('No Results Found', (string) $content);
     }
 
     public function testMergeAction(): void

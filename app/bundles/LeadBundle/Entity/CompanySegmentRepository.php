@@ -62,8 +62,7 @@ class CompanySegmentRepository extends CommonRepository
 
     /**
      * @param \Doctrine\ORM\QueryBuilder|\Doctrine\DBAL\Query\QueryBuilder $q
-     *
-     * @phpstan-param mixed $filter
+     * @param mixed                                                        $filter
      *
      * @return array<mixed>
      */

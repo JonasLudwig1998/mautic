@@ -3,6 +3,7 @@
 namespace Mautic\CategoryBundle\Form\Type;
 
 use Doctrine\ORM\EntityManager;
+use Mautic\CategoryBundle\Entity\Category;
 use Mautic\CategoryBundle\Model\CategoryModel;
 use Mautic\CoreBundle\Form\DataTransformer\IdToEntityModelTransformer;
 use Symfony\Component\Form\AbstractType;
@@ -16,7 +17,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * @extends AbstractType<mixed>
  */
-class CategoryListType extends AbstractType
+final class CategoryListType extends AbstractType
 {
     public function __construct(
         private readonly EntityManager $em,
@@ -29,7 +30,7 @@ class CategoryListType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if (true === $options['return_entity']) {
-            $transformer = new IdToEntityModelTransformer($this->em, \Mautic\CategoryBundle\Entity\Category::class, 'id');
+            $transformer = new IdToEntityModelTransformer($this->em, Category::class, 'id');
             $builder->addModelTransformer($transformer);
         }
     }
@@ -77,7 +78,7 @@ class CategoryListType extends AbstractType
         return 'category';
     }
 
-    public function getParent(): ?string
+    public function getParent(): string
     {
         return ChoiceType::class;
     }

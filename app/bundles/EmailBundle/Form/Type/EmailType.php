@@ -3,6 +3,7 @@
 namespace Mautic\EmailBundle\Form\Type;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Mautic\AssetBundle\Entity\Asset;
 use Mautic\AssetBundle\Form\Type\AssetListType;
 use Mautic\CategoryBundle\Form\Type\CategoryListType;
 use Mautic\CoreBundle\Form\DataTransformer\IdToEntityModelTransformer;
@@ -21,7 +22,9 @@ use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\EmailBundle\Helper\EmailConfigInterface;
 use Mautic\EmailBundle\Helper\EmailDefaultsHelper;
+use Mautic\FormBundle\Entity\Form;
 use Mautic\FormBundle\Form\Type\FormListType;
+use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Form\Type\LeadListType;
 use Mautic\LeadBundle\Helper\FormFieldHelper;
 use Mautic\PageBundle\Entity\Page;
@@ -46,7 +49,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * @extends AbstractType<Email>
  */
-class EmailType extends AbstractType
+final class EmailType extends AbstractType
 {
     private readonly bool $isDraftEnabled;
 
@@ -230,7 +233,7 @@ class EmailType extends AbstractType
         );
 
         $template = $emailEntity->getTemplate() ?? 'blank';
-        if (true === $this->isDraftEnabled && $emailEntity->hasDraft() && !empty($emailEntity->getDraft()->getTemplate())) {
+        if ($this->isDraftEnabled && $emailEntity->hasDraft() && !empty($emailEntity->getDraft()->getTemplate())) {
             $template = $emailEntity->getDraft()->getTemplate();
         }
         // If theme does not exist, set empty
@@ -283,7 +286,7 @@ class EmailType extends AbstractType
         );
 
         $html = $emailEntity->getCustomHtml();
-        if (true === $this->isDraftEnabled && $emailEntity->hasDraft() && !empty($emailEntity->getDraft()->getHtml())) {
+        if ($this->isDraftEnabled && $emailEntity->hasDraft() && !empty($emailEntity->getDraft()->getHtml())) {
             $html = $emailEntity->getDraft()->getHtml();
         }
         $builder->add(
@@ -304,7 +307,7 @@ class EmailType extends AbstractType
             ]
         );
 
-        $transformer = new IdToEntityModelTransformer($this->em, \Mautic\FormBundle\Entity\Form::class, 'id');
+        $transformer = new IdToEntityModelTransformer($this->em, Form::class, 'id');
         $builder->add(
             $builder->create(
                 'unsubscribeForm',
@@ -467,7 +470,7 @@ class EmailType extends AbstractType
             ]
         );
 
-        $transformer = new IdToEntityModelTransformer($this->em, \Mautic\LeadBundle\Entity\LeadList::class, 'id', true);
+        $transformer = new IdToEntityModelTransformer($this->em, LeadList::class, 'id', true);
         $builder->add(
             $builder->create(
                 'lists',
@@ -521,7 +524,7 @@ class EmailType extends AbstractType
 
         $transformer = new IdToEntityModelTransformer(
             $this->em,
-            \Mautic\AssetBundle\Entity\Asset::class,
+            Asset::class,
             'id',
             true
         );

@@ -18,8 +18,8 @@ final class CompanySegmentTest extends TestCase
         $entity->setAlias($alias);
         $entity->setPublicName($publicName);
 
-        self::assertSame($name, $entity->getPublicName());
-        self::assertSame($name, $entity->getAlias());
+        $this->assertSame($name, $entity->getPublicName());
+        $this->assertSame($name, $entity->getAlias());
     }
 
     public static function provideEmptyFields(): \Generator
@@ -38,7 +38,7 @@ final class CompanySegmentTest extends TestCase
         $entity->setName($name);
         $entity->setAlias($value);
 
-        self::assertSame($name, $entity->getAlias());
+        $this->assertSame($name, $entity->getAlias());
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('provideNullOrEmptyString')]
@@ -49,7 +49,7 @@ final class CompanySegmentTest extends TestCase
         $entity->setName($name);
         $entity->setPublicName($value);
 
-        self::assertSame($name, $entity->getPublicName());
+        $this->assertSame($name, $entity->getPublicName());
     }
 
     public static function provideNullOrEmptyString(): \Generator
@@ -69,8 +69,8 @@ final class CompanySegmentTest extends TestCase
 
         $clonedEntity = clone $entity;
 
-        self::assertNull($clonedEntity->getId());
-        self::assertSame('Test Segment', $clonedEntity->getName());
+        $this->assertNull($clonedEntity->getId());
+        $this->assertSame('Test Segment', $clonedEntity->getName());
     }
 
     public function testCloneResetsIsPublished(): void
@@ -80,7 +80,7 @@ final class CompanySegmentTest extends TestCase
 
         $clonedEntity = clone $entity;
 
-        self::assertFalse($clonedEntity->isPublished());
+        $this->assertFalse($clonedEntity->isPublished());
     }
 
     public function testCloneResetsAlias(): void
@@ -92,8 +92,8 @@ final class CompanySegmentTest extends TestCase
         $clonedEntity = clone $entity;
 
         // After cloning, setAlias('') is called which falls back to the name
-        self::assertSame('Test', $clonedEntity->getAlias());
-        self::assertNotSame('test-alias', $clonedEntity->getAlias());
+        $this->assertSame('Test', $clonedEntity->getAlias());
+        $this->assertNotSame('test-alias', $clonedEntity->getAlias());
     }
 
     public function testCloneResetsLastBuiltDate(): void
@@ -103,7 +103,7 @@ final class CompanySegmentTest extends TestCase
 
         $clonedEntity = clone $entity;
 
-        self::assertNull($clonedEntity->getLastBuiltDate());
+        $this->assertNotInstanceOf(\DateTimeInterface::class, $clonedEntity->getLastBuiltDate());
     }
 
     public function testCloneResetsSegmentCompanies(): void
@@ -113,7 +113,7 @@ final class CompanySegmentTest extends TestCase
 
         $clonedEntity = clone $entity;
 
-        self::assertCount(0, $clonedEntity->getSegmentCompanies());
-        self::assertNotSame($entity->getSegmentCompanies(), $clonedEntity->getSegmentCompanies());
+        $this->assertCount(0, $clonedEntity->getSegmentCompanies());
+        $this->assertNotSame($entity->getSegmentCompanies(), $clonedEntity->getSegmentCompanies());
     }
 }
