@@ -48,7 +48,36 @@ export const editorLifecycleMixin = {
       compiledOptions.style = styleConfig;
     }
 
+    this.applyPromoHeadlineToolbar(compiledOptions, target);
+
     return compiledOptions;
+  },
+
+  /**
+   * Restricts the CKEditor toolbar for promo headline elements.
+   * Only allows basic text formatting — no lists, tables, or links.
+   */
+  applyPromoHeadlineToolbar(options, target) {
+    const component = this.editor?.getSelected?.();
+    const isPromoHeadline =
+      component?.get?.('type') === 'promo-headline' ||
+      target?.getAttribute?.('data-promo-role') === 'headline';
+
+    if (!isPromoHeadline) {
+      return;
+    }
+
+    const headlineToolbar = [
+      'undo', 'redo', '|',
+      'bold', 'italic', '|',
+      'fontSize', 'fontColor',
+    ];
+
+    if (options.toolbar && typeof options.toolbar === 'object') {
+      options.toolbar = { ...options.toolbar, items: headlineToolbar };
+    } else {
+      options.toolbar = { items: headlineToolbar };
+    }
   },
 
   extendHeadingOptionsFromTarget(headingConfig, target) {
@@ -603,12 +632,49 @@ export const editorLifecycleMixin = {
     ckeditorContent = ckeditorContent.replace(/ data-gjs-span="1"/g, '');
     const baseContent = this.resolveBaseContent(ckeditorContent);
 
-    return this.normalizeWordInlineStyles(
+    let normalized = this.normalizeWordInlineStyles(
       this.normalizeListMarkerStyles(
         this.normalizeIndentationStyles(this.normalizeLinkUnderlineColors(baseContent))
       )
     );
+
+    if (this.isPromoHeadlineElement()) {
+      normalized = this.applyPromoHeadlineDefaultColor(normalized);
+    }
+
+    return normalized;
   },
+
+  /**
+   * Checks if the currently edited element is a promo headline.
+   */
+  isPromoHeadlineElement() {
+    const component = this.editor?.getSelected?.();
+    return (
+      component?.get?.('type') === 'promo-headline' ||
+      this.el?.getAttribute?.('data-promo-role') === 'headline'
+    );
+  },
+
+  /**
+   * Sets a default text color on promo headline content when no explicit
+   * color is present. Wraps bare text nodes in a colored <span>.
+   */
+  applyPromoHeadlineDefaultColor(content) {
+    if (typeof content !== 'string' || !content.trim()) {
+      return content;
+    }
+
+    const defaultColor = '#c0392b';
+
+    // If any inline color is already set, do not override.
+    if (/style="[^"]*color\s*:/i.test(content)) {
+      return content;
+    }
+
+    return `<span style="color: ${defaultColor};">${content}</span>`;
+  },
+
 
   restoreOriginalElementAttributes(content) {
     if (typeof content !== 'string') {

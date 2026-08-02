@@ -1,8 +1,6 @@
 import DynamicContentCommands from './dynamicContent/dynamicContent.commands';
-import loadPromoBannerCommands from './promoBanner/promoBanner.commands';
 
 export default (editor) => {
-  loadPromoBannerCommands(editor);
   const dynamicContentCmd = new DynamicContentCommands(editor);
 
   // Launch Dynamic Content popup: new or edit

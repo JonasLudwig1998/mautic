@@ -17,8 +17,7 @@ export default (editor, opts = {}) => {
     panelMjml.restylePanels();
     blockMjml.addBlocks();
 
-    const promoBannerBlocks = new PromoBannerBlocks(editor);
-    promoBannerBlocks.addPromoBannerBlock();
+    new PromoBannerBlocks(editor).addPromoBannerBlock();
   }
 
   // a add button block for landing page
@@ -53,13 +52,6 @@ export default (editor, opts = {}) => {
   /*
    * Custom block inside Sections category
    */
-
-  // Promo Banner
-  if (typeof bm.get('promo-banner') !== 'undefined') {
-    bm.get('promo-banner').set({
-      category: Mautic.translate('grapesjsbuilder.categorySectionLabel'),
-    });
-  }
 
   // MJML columns
   if (typeof bm.get('mj-1-column') !== 'undefined') {

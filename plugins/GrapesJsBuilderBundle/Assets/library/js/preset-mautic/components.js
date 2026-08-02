@@ -5,5 +5,5 @@ import PromoBannerDomComponents from './promoBanner/promoBanner.domcomponents';
 // https://grapesjs.com/docs/api/component.html
 export default (editor) => {
   DynamicContentDomComponents.addDynamicContentType(editor);
-  PromoBannerDomComponents.addPromoBannerType(editor);
+  PromoBannerDomComponents.addPromoHeadlineType(editor);
 };
